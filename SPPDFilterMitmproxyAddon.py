@@ -19,11 +19,12 @@
 
 import mitmproxy
 import json
+import time
 
 ## Change DEF_UPGRADE_LEVEL variable listed below to change levels and upgrades shown in SPPD deckbuilder
 ## Restart of SPPD app is required after every change.
 
-DEF_UPGRADE_LEVEL = ['lvl 1, 1/5']
+DEF_UPGRADE_LEVEL = ['lvl 4, 29/40']
 
 ## Possible values below
 
@@ -120,8 +121,8 @@ class SPPDFilter:
                 while True:
                         if flow.request.url == 'https://android.googleapis.com/auth':
                                 break
-                        if flow.request.url.startswith('https://app-measurement.com/'):
-                                break
+##                        if flow.request.url.startswith('https://app-measurement.com/'):
+##                                break
 ##                        if flow.request.url == 'https://reports.crashlytics.com/spi/v1/platforms/android/apps/com.ubisoft.dragonfire/reports':
 ##                                break
                         if flow.request.url == 'https://connectivitycheck.gstatic.com/generate_204':
@@ -132,8 +133,8 @@ class SPPDFilter:
 ##                                break
 ##                        if flow.request.url == 'https://www.googleapis.com/games/v1/applications/played':
 ##                                break
-                        if flow.request.url == 'https://www.googleapis.com/games/v1/events?language=en-US':
-                                break
+##                        if flow.request.url == 'https://www.googleapis.com/games/v1/events?language=en-US':
+##                                break
 ##                        if flow.request.url == 'https://www.googleapis.com/games/v1/achievements?language=en-US':
 ##                                break
 ##                        if flow.request.url.startswith('https://www.googleapis.com/games/v1/players/'):
@@ -146,12 +147,12 @@ class SPPDFilter:
 ##                                break
                         if flow.request.url == 'https://public-ubiservices.ubi.com/v3/profiles/sessions':
                                 break
-                        if flow.request.url == 'https://ssl.google-analytics.com/batch':
-                                break
+##                        if flow.request.url == 'https://ssl.google-analytics.com/batch':
+##                                break
                         if flow.request.url == 'https://msr-public-ubiservices.ubi.com/v1/spaces/news?spaceId=1a49a190-9703-4460-91fc-f17c4314ecc3':
                                 break
-                        if flow.request.url.startswith('https://gamecfg-mob.ubi.com/profile/?action=register&productid=682'):
-                                break
+##                        if flow.request.url.startswith('https://gamecfg-mob.ubi.com/profile/?action=register&productid=682'):
+##                                break
                         if flow.request.url.startswith('https://ubistatic-a.akamaihd.net/0081/'):
                                 break
 ##                        if flow.request.url == 'https://msr-public-ubiservices.ubi.com/v2/profiles/ece1f966-ec43-44f5-89dd-9d2e98fba81e/events':
@@ -174,18 +175,26 @@ class SPPDFilter:
 ##                                break
                         if flow.request.url.startswith('https://img.youtube.com/'):
                                 break
-                        if flow.request.url == 'https://android.clients.google.com/fdfe/skuDetails':
-                                break
+##                        if flow.request.url == 'https://android.clients.google.com/fdfe/skuDetails':
+##                                break
                         if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/profiles/ubimobile':
                                 break
 ##                        if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/gamestate/entries':
 ##                                break
 ##                        if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/achievement/status':
 ##                                break
-                        if flow.request.url == 'https://android.clients.google.com/fdfe/ees/bulkAcquire?nocache_qos=lt':
-                                break
+##                        if flow.request.url == 'https://android.clients.google.com/fdfe/ees/bulkAcquire?nocache_qos=lt':
+##                                break
                         if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start':
                                 break
+                        if flow.request.url.startswith('http://mitm.it/'):
+                                break
+                        if flow.request.url.startswith('https://android.clients.google.com/fdfe/apps/checkLicense?pkgn=com.ubisoft.dragonfire'):
+                                break
+                        if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/profiles/names':
+                                break
+                        
+                        
                         
                         mitmproxy.ctx.log.info('blocked flow.request.url == ' + repr(flow.request.url))
                         flow.response = mitmproxy.http.HTTPResponse.make(200)
@@ -195,44 +204,231 @@ class SPPDFilter:
                 if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start':
                         o = json.loads(flow.response.content.decode())
 ##                        mitmproxy.ctx.log.info('len(flow.response.content) == ' + repr(len(flow.response.content)))
-                        del o['pvp']
-                        del o['team']
+                        if 'pvp' in o:
+                                del o['pvp']
+                        if 'team' in o:
+                                del o['team']
                         # causes privacy preferences popup that can't be removed
 ##                        del o['session']
-                        del o['time']
-                        del o['configuration']
-                        del o['event']
-                        del o['store']
-                        del o['session']['control']
-                        del o['session']['first_login']
-                        del o['session']['country']
-                        del o['session']['random']
-                        del o['session']['player_id']
-                        del o['session']['last_login']
+                        if 'time' in o:
+                                del o['time']
+                        if 'configuration' in o:
+                                del o['configuration']
+                        if 'event' in o:
+                                del o['event']
+                        if 'store' in o:
+                                del o['store']
+                        if 'control' in o['session']:
+                                del o['session']['control']
+                        if 'first_login' in o['session']:
+                                del o['session']['first_login']
+                        if 'country' in o['session']:
+                                del o['session']['country']
+                        if 'random' in o['session']:
+                                del o['session']['random']
+                        if 'player_id' in o['session']:
+                                del o['session']['player_id']
+                        if 'last_login' in o['session']:
+                                del o['session']['last_login']
                         # causes popup about account already running at different device
 ##                        del o['session']['device']
-                        del o['session']['setting_bits']
-                        del o['session']['gdpr']
+                        if 'setting_bits' in o['session']:
+                                del o['session']['setting_bits']
+                        if 'gdpr' in o['session']:
+                                del o['session']['gdpr']
                         # causes privacy preferences popup that can't be removed
 ##                        del o['session']['gdpr_consent']
-                        del o['player_data']['active_gear']
-                        del o['player_data']['stats']
-                        del o['player_data']['gear']
-                        del o['player_data']['items']
-                        del o['player_data']['messages']
-                        del o['player_data']['common']
+                        o['session']['gdpr_consent'] = int(time.time()) - 180
+                        
+                        if 'active_gear' in o['player_data']:
+                                del o['player_data']['active_gear']
+                        if 'stats' in o['player_data']:
+                                del o['player_data']['stats']
+                        if 'gear' in o['player_data']:
+                                del o['player_data']['gear']
+                        if 'items' in o['player_data']:
+                                del o['player_data']['items']
+                        if 'messages' in o['player_data']:
+                                del o['player_data']['messages']
+                        if 'common' in o['player_data']:
+                                del o['player_data']['common']
                         # pvp play button is gone
-                        del o['player_data']['state']
-                        del o['player_data']['avatar']
+                        if 'state' in o['player_data']:
+                                del o['player_data']['state']
+                        if 'avatar' in o['player_data']:
+                                del o['player_data']['avatar']
                         # causes game to play opening scene
 ##                        del o['player_data']['episode']
+
+                        ## level id constants
+                        # #1 --- 1327
+                        # #2 --- 1344
+                        # #3 --- 1338
+                        # #4 --- 1326
+                        # #5 --- 1312
+                        
+                        # #6 --- 1400
+                        # #7 --- 1475
+                        # #8 --- 1401
+                        # #9 --- 1476
+                        # #10 --- 116
+                        
+                        # #11 --- 1410
+                        # #12 --- 1411
+                        # #13 --- 1412
+                        # #14 --- 1413
+                        # #15 --- 1415
+                        
+                        # #16 --- 1416
+                        # #17 --- 1417
+                        # #18 --- 1418
+                        # #19 --- 1419
+                        # #20 --- 1660
+                        
+                        # #21 --- 1661
+                        # #22 --- 1662
+                        # #23 --- 1663
+                        # #24 --- 1664
+                        # #25 --- 1420
+                        
+                        # #26 --- 1494
+                        # #27 --- 1495
+                        # #28 --- 1496
+                        # #29 --- 1497
+                        # #30 --- 1498
+                        
+                        # #31 --- 1499
+                        # #32 --- 1500
+                        # #33 --- 1501
+                        # #34 --- 1502
+                        # #35 --- 1503
+                        
+                        # #36 --- 1524
+                        # #37 --- 1525
+                        # #38 --- 1526
+                        # #39 --- 1527
+                        # #40 --- 1528
+                        
+                        # #41 --- 1504
+                        # #42 --- 1505
+                        # #43 --- 1506
+                        # #44 --- 1507
+                        # #45 --- 1508
+                        
+                        # #46 --- 1509
+                        # #47 --- 1510
+                        # #48 --- 1511
+                        # #49 --- 1512
+                        # #50 --- 1513
+                        
+                        # #51 --- 1514
+                        # #52 --- 1515
+                        # #53 --- 1516
+                        # #54 --- 1517
+                        # #55 --- 1518
+                        
+                        # #56 --- 1519
+                        # #57 --- 1520
+                        # #58 --- 1521
+                        # #59 --- 1522
+                        # #60 --- 1523
+                        
+                        o['player_data']['episode'] = [\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1515, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1514, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1517, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1516, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1518, 'special': 1}\
+                                                                   ], 'id': 11, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1509, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1511, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1510, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1513, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1512, 'w': 25, 'l': 25}\
+                                                                   ], 'id': 10, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1520, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1519, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1521, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1522, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1523, 'special': 1}\
+                                                                   ], 'id': 12, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1326, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1344, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1327, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1312, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1338, 'w': 25, 'l': 25}\
+                                                                   ], 'id': 1, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 0, 's': 0, 'id': 2135, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 2161, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 1838, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 2160, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 2156, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 2157, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 2158, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 2159, 'w': 1, 'l': 0}, \
+                                                                   {'a': 0, 's': 0, 'id': 2163, 'w': 1, 'l': 0}\
+                                                                   ], 'id': 0, 'star_level': 1}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1410, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1411, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1412, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1413, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1415, 'special': 1}\
+                                                                   ], 'id': 3, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 116, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1401, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1400, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1476, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1475, 'w': 25, 'l': 25}\
+                                                                   ], 'id': 2, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1420, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1664, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1663, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1662, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1661, 'w': 25, 'l': 25}\
+                                                                   ], 'id': 5, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1418, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1419, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1660, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1416, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1417, 'w': 25, 'l': 25}\
+                                                                   ], 'id': 4, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1502, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1499, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1500, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1501, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1503, 'special': 1}\
+                                                                   ], 'id': 7, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1498, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1494, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1495, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1496, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1497, 'w': 25, 'l': 25}\
+                                                                   ], 'id': 6, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1508, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1506, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1507, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1504, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1505, 'w': 25, 'l': 25}\
+                                                                   ], 'id': 9, 'star_level': 4}, \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1524, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1525, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1526, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1527, 'w': 25, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1528, 'special': 1}\
+                                                                   ], 'id': 8, 'star_level': 4}]
                         # connection error
 ##                        del o['player_data']['balance']
-                        o['player_data']['balance'] = [{'code': 'PVP', 'value': 0}, {'code': 'DM', 'value': 0}, {'code': 'CN', 'value': 0}, {'code': 'SUP', 'value': 0}]
-                        del o['player_data']['call_outs']
-                        del o['player_data']['store']
-                        del o['player_data']['decks']
-
+                        o['player_data']['balance'] = [{'code': 'PVP', 'value': 0}, \
+                                                       {'code': 'DM', 'value': 0}, \
+                                                       {'code': 'CN', 'value': 0}, \
+                                                       {'code': 'SUP', 'value': 0}]
+                        if 'call_outs' in o['player_data']:
+                                del o['player_data']['call_outs']
+                        if 'store' in o['player_data']:
+                                del o['player_data']['store']
+                        if 'decks' in o['player_data']:
+                                del o['player_data']['decks']
+        
 
 
                         CharacterNames = {\
