@@ -3,7 +3,6 @@
 ## Usage command: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon.py
 ##
 ## Somewhat complete mitmproxy API documentation is available by using this command: python.exe -m pydoc mitmproxy
-## (third party tutorials about mitmproxy were more helpful than supplied documentation, sorry developers about this)
 ##
 ## On target device change proxy to point at mitmproxy's endpoint (port 8080,
 ## IP address == local IP adress for machine, usually comes in form 192.168.xxx.xxx),
@@ -11,99 +10,265 @@
 ##
 #######
 ##
-## Upon successful setup, this plugin should be able to rewrite card levels and upgrades, 
-## allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
-## block every other SPPD functionality.
-## No attempts should be made to work around restrictions and use any other features while this plugin is running.
-
 
 import mitmproxy
 import json
 import time
 
-## Change DEF_UPGRADE_LEVEL variable listed below to change levels and upgrades shown in SPPD deckbuilder
+
+##DEF_USE_CUSTOM_UPGRADE_LEVEL = [True]
+
+## If DEF_USE_CUSTOM_UPGRADE_LEVEL is set, this addon rewrites card levels and upgrades, 
+## allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
+## block every other SPPD functionality.
+
+DEF_USE_CUSTOM_UPGRADE_LEVEL = [False]
+
+## If DEF_USE_CUSTOM_UPGRADE_LEVEL is not set, this addon tricks SPPD into using guest account,
+## if used on fresh SPPD installation. Allows to use SPPD normally.
+## This addon should be active in order to use guest account.
+
+DEF_UPGRADE_LEVEL = ['lvl 1, 1/5']
+
+## Change DEF_UPGRADE_LEVEL variable to change levels and upgrades shown in SPPD deckbuilder
 ## Restart of SPPD app is required after every change.
 
-DEF_UPGRADE_LEVEL = ['lvl 4, 29/40']
+## Variable DEF_UPGRADE_LEVEL only has effect if DEF_USE_CUSTOM_UPGRADE_LEVEL is set.
 
-## Possible values below
+## DEF_UPGRADE_LEVEL does not works with non playable cards, these cards need to loaded into a deck using
+## DEF_CUSTOM_CARDS variable. In order for non playable cards to show up in deck builder, these cards
+## need to be received with packs first. See free pack logic referenced in code.
 
-##'lvl 1, 1/5'
-##'lvl 1, 2/5'
-##'lvl 1, 3/5'
-##'lvl 1, 4/5'
-##'lvl 1, 5/5'
-##'lvl 2, 5/15'
-##'lvl 2, 6/15'
-##'lvl 2, 7/15'
-##'lvl 2, 8/15'
-##'lvl 2, 9/15'
-##'lvl 2, 10/15'
-##'lvl 2, 11/15'
-##'lvl 2, 12/15'
-##'lvl 2, 13/15'
-##'lvl 2, 14/15'
-##'lvl 2, 15/15'
-##'lvl 3, 15/25'
-##'lvl 3, 16/25'
-##'lvl 3, 17/25'
-##'lvl 3, 18/25'
-##'lvl 3, 19/25'
-##'lvl 3, 20/25'
-##'lvl 3, 21/25'
-##'lvl 3, 22/25'
-##'lvl 3, 23/25'
-##'lvl 3, 24/25'
-##'lvl 3, 25/25'
-##'lvl 4, 25/40'
-##'lvl 4, 26/40'
-##'lvl 4, 27/40'
-##'lvl 4, 28/40'
-##'lvl 4, 29/40'
-##'lvl 4, 30/40'
-##'lvl 4, 31/40'
-##'lvl 4, 32/40'
-##'lvl 4, 33/40'
-##'lvl 4, 34/40'
-##'lvl 4, 35/40'
-##'lvl 4, 36/40'
-##'lvl 4, 37/40'
-##'lvl 4, 38/40'
-##'lvl 4, 39/40'
-##'lvl 4, 40/40'
-##'lvl 5, 40/55'
-##'lvl 5, 41/55'
-##'lvl 5, 42/55'
-##'lvl 5, 43/55'
-##'lvl 5, 44/55'
-##'lvl 5, 45/55'
-##'lvl 5, 46/55'
-##'lvl 5, 47/55'
-##'lvl 5, 48/55'
-##'lvl 5, 49/55'
-##'lvl 5, 50/55'
-##'lvl 5, 51/55'
-##'lvl 5, 52/55'
-##'lvl 5, 53/55'
-##'lvl 5, 54/55'
-##'lvl 5, 55/55'
-##'lvl 6, 55/70'
-##'lvl 6, 56/70'
-##'lvl 6, 57/70'
-##'lvl 6, 58/70'
-##'lvl 6, 59/70'
-##'lvl 6, 60/70'
-##'lvl 6, 61/70'
-##'lvl 6, 62/70'
-##'lvl 6, 63/70'
-##'lvl 6, 64/70'
-##'lvl 6, 65/70'
-##'lvl 6, 66/70'
-##'lvl 6, 67/70'
-##'lvl 6, 68/70'
-##'lvl 6, 69/70'
-##'lvl 6, 70/70'
-##'lvl 7, 70/70'
+DEF_CUSTOM_CARDS = [[66]]
+
+## DEF_CUSTOM_CARDS loads a list of cards into sppd deck
+
+upgradedict = {\
+        'lvl 1, 1/5': {'s': 0, 'c': 0, 'x': 0, 'w': 1.0},\
+        'lvl 1, 2/5': {'s': 0, 'c': 0, 'x': 1, 'w': 1.0},\
+        'lvl 1, 3/5': {'s': 0, 'c': 0, 'x': 2, 'w': 1.0},\
+        'lvl 1, 4/5': {'s': 0, 'c': 0, 'x': 3, 'w': 1.0},\
+        'lvl 1, 5/5': {'s': 0, 'c': 0, 'x': 4, 'w': 1.0},\
+        'lvl 2, 5/15': {'s': 1, 'c': 0, 'x': 0, 'w': 2.0},\
+        'lvl 2, 6/15': {'s': 1, 'c': 0, 'x': 1, 'w': 2.0},\
+        'lvl 2, 7/15': {'s': 1, 'c': 0, 'x': 2, 'w': 2.0},\
+        'lvl 2, 8/15': {'s': 1, 'c': 0, 'x': 3, 'w': 2.0},\
+        'lvl 2, 9/15': {'s': 1, 'c': 0, 'x': 4, 'w': 2.0},\
+        'lvl 2, 10/15': {'s': 1, 'c': 0, 'x': 5, 'w': 2.0},\
+        'lvl 2, 11/15': {'s': 1, 'c': 0, 'x': 6, 'w': 2.0},\
+        'lvl 2, 12/15': {'s': 1, 'c': 0, 'x': 7, 'w': 2.0},\
+        'lvl 2, 13/15': {'s': 1, 'c': 0, 'x': 8, 'w': 2.0},\
+        'lvl 2, 14/15': {'s': 1, 'c': 0, 'x': 9, 'w': 2.0},\
+        'lvl 2, 15/15': {'s': 1, 'c': 0, 'x': 10, 'w': 2.0},\
+        'lvl 3, 15/25': {'s': 2, 'c': 0, 'x': 0, 'w': 3.0},\
+        'lvl 3, 16/25': {'s': 2, 'c': 0, 'x': 1, 'w': 3.0},\
+        'lvl 3, 17/25': {'s': 2, 'c': 0, 'x': 2, 'w': 3.0},\
+        'lvl 3, 18/25': {'s': 2, 'c': 0, 'x': 3, 'w': 3.0},\
+        'lvl 3, 19/25': {'s': 2, 'c': 0, 'x': 4, 'w': 3.0},\
+        'lvl 3, 20/25': {'s': 2, 'c': 0, 'x': 5, 'w': 3.0},\
+        'lvl 3, 21/25': {'s': 2, 'c': 0, 'x': 6, 'w': 3.0},\
+        'lvl 3, 22/25': {'s': 2, 'c': 0, 'x': 7, 'w': 3.0},\
+        'lvl 3, 23/25': {'s': 2, 'c': 0, 'x': 8, 'w': 3.0},\
+        'lvl 3, 24/25': {'s': 2, 'c': 0, 'x': 9, 'w': 3.0},\
+        'lvl 3, 25/25': {'s': 2, 'c': 0, 'x': 10, 'w': 3.0},\
+        'lvl 4, 25/40': {'s': 3, 'c': 0, 'x': 0, 'w': 4.0},\
+        'lvl 4, 26/40': {'s': 3, 'c': 0, 'x': 1, 'w': 4.0},\
+        'lvl 4, 27/40': {'s': 3, 'c': 0, 'x': 2, 'w': 4.0},\
+        'lvl 4, 28/40': {'s': 3, 'c': 0, 'x': 3, 'w': 4.0},\
+        'lvl 4, 29/40': {'s': 3, 'c': 0, 'x': 4, 'w': 4.0},\
+        'lvl 4, 30/40': {'s': 3, 'c': 0, 'x': 5, 'w': 4.0},\
+        'lvl 4, 31/40': {'s': 3, 'c': 0, 'x': 6, 'w': 4.0},\
+        'lvl 4, 32/40': {'s': 3, 'c': 0, 'x': 7, 'w': 4.0},\
+        'lvl 4, 33/40': {'s': 3, 'c': 0, 'x': 8, 'w': 4.0},\
+        'lvl 4, 34/40': {'s': 3, 'c': 0, 'x': 9, 'w': 4.0},\
+        'lvl 4, 35/40': {'s': 3, 'c': 0, 'x': 10, 'w': 4.0},\
+        'lvl 4, 36/40': {'s': 3, 'c': 0, 'x': 11, 'w': 4.0},\
+        'lvl 4, 37/40': {'s': 3, 'c': 0, 'x': 12, 'w': 4.0},\
+        'lvl 4, 38/40': {'s': 3, 'c': 0, 'x': 13, 'w': 4.0},\
+        'lvl 4, 39/40': {'s': 3, 'c': 0, 'x': 14, 'w': 4.0},\
+        'lvl 4, 40/40': {'s': 3, 'c': 0, 'x': 15, 'w': 4.0},\
+        'lvl 5, 40/55': {'s': 4, 'c': 0, 'x': 0, 'w': 5.0},\
+        'lvl 5, 41/55': {'s': 4, 'c': 0, 'x': 1, 'w': 5.0},\
+        'lvl 5, 42/55': {'s': 4, 'c': 0, 'x': 2, 'w': 5.0},\
+        'lvl 5, 43/55': {'s': 4, 'c': 0, 'x': 3, 'w': 5.0},\
+        'lvl 5, 44/55': {'s': 4, 'c': 0, 'x': 4, 'w': 5.0},\
+        'lvl 5, 45/55': {'s': 4, 'c': 0, 'x': 5, 'w': 5.0},\
+        'lvl 5, 46/55': {'s': 4, 'c': 0, 'x': 6, 'w': 5.0},\
+        'lvl 5, 47/55': {'s': 4, 'c': 0, 'x': 7, 'w': 5.0},\
+        'lvl 5, 48/55': {'s': 4, 'c': 0, 'x': 8, 'w': 5.0},\
+        'lvl 5, 49/55': {'s': 4, 'c': 0, 'x': 9, 'w': 5.0},\
+        'lvl 5, 50/55': {'s': 4, 'c': 0, 'x': 10, 'w': 5.0},\
+        'lvl 5, 51/55': {'s': 4, 'c': 0, 'x': 11, 'w': 5.0},\
+        'lvl 5, 52/55': {'s': 4, 'c': 0, 'x': 12, 'w': 5.0},\
+        'lvl 5, 53/55': {'s': 4, 'c': 0, 'x': 13, 'w': 5.0},\
+        'lvl 5, 54/55': {'s': 4, 'c': 0, 'x': 14, 'w': 5.0},\
+        'lvl 5, 55/55': {'s': 4, 'c': 0, 'x': 15, 'w': 5.0},\
+        'lvl 6, 55/70': {'s': 5, 'c': 0, 'x': 0, 'w': 7.0},\
+        'lvl 6, 56/70': {'s': 5, 'c': 0, 'x': 1, 'w': 7.0},\
+        'lvl 6, 57/70': {'s': 5, 'c': 0, 'x': 2, 'w': 7.0},\
+        'lvl 6, 58/70': {'s': 5, 'c': 0, 'x': 3, 'w': 7.0},\
+        'lvl 6, 59/70': {'s': 5, 'c': 0, 'x': 4, 'w': 7.0},\
+        'lvl 6, 60/70': {'s': 5, 'c': 0, 'x': 5, 'w': 7.0},\
+        'lvl 6, 61/70': {'s': 5, 'c': 0, 'x': 6, 'w': 7.0},\
+        'lvl 6, 62/70': {'s': 5, 'c': 0, 'x': 7, 'w': 7.0},\
+        'lvl 6, 63/70': {'s': 5, 'c': 0, 'x': 8, 'w': 7.0},\
+        'lvl 6, 64/70': {'s': 5, 'c': 0, 'x': 9, 'w': 7.0},\
+        'lvl 6, 65/70': {'s': 5, 'c': 0, 'x': 10, 'w': 7.0},\
+        'lvl 6, 66/70': {'s': 5, 'c': 0, 'x': 11, 'w': 7.0},\
+        'lvl 6, 67/70': {'s': 5, 'c': 0, 'x': 12, 'w': 7.0},\
+        'lvl 6, 68/70': {'s': 5, 'c': 0, 'x': 13, 'w': 7.0},\
+        'lvl 6, 69/70': {'s': 5, 'c': 0, 'x': 14, 'w': 7.0},\
+        'lvl 6, 70/70': {'s': 5, 'c': 0, 'x': 15, 'w': 7.0},\
+        'lvl 7, 70/70': {'s': 6, 'c': 0, 'x': 0, 'w': 7.0},\
+        '0': {'s': 0, 'c': 0, 'x': 0, 'w': 1.0}}
+
+CharacterNames = {\
+        1701: b'Calamity Heidi', \
+        1700: b'Bandita Sally', \
+        131: b'Smuggler Ike', \
+        140: b'Captain Wendy', \
+        27: b'Deckhand Butters', \
+        35: b'Gunslinger Kyle', \
+        50: b'Hookhand Clyde', \
+        92: b'Pirate Ship Timmy', \
+        200: b'Shaman Token', \
+        2114: b'Sharpshooter Shelly', \
+        205: b'Storyteller Jimmy', \
+        1276: b'Arrowstorm', \
+        1288: b'Barrel Dougie', \
+        1808: b'Buccaneer Bebe', \
+        134: b'Inuit Kenny', \
+        186: b'Lightning Bolt', \
+        28: b'Outlaw Tweek', \
+        8: b'Medicine Woman Sharon', \
+        45: b'Sheriff Cartman', \
+        12: b'Stan of Many Moons', \
+        2044: b'Swashbuckler Red', \
+        2266: b'Thunderbird', \
+        2209: b'Big Mesquite Murph', \
+        48: b'Incan Craig', \
+        10: b'Pocahontas Randy', \
+        24: b'Fireball', \
+        2013: b'Swordsman Garrison', \
+        55: b'Astronaut Butters', \
+        209: b'Enforcer Jimmy', \
+        203: b'Space Warrior Token', \
+        193: b'Alien Clyde', \
+        1949: b'Bounty Hunter Kyle', \
+        1824: b'Four-Assed Monkey', \
+        40: b'Freeze Ray', \
+        133: b'Gizmo Ike', \
+        52: b'Ice Sniper Wendy', \
+        1657: b'Poison', \
+        30: b'Program Stan', \
+        1805: b'Robo Bebe', \
+        2308: b'Space Pilot Bradley', \
+        1813: b'Visitors', \
+        46: b'Warboy Tweek', \
+        2101: b'Alien Drone', \
+        146: b'Cyborg Kenny', \
+        1269: b'Hyperdrive', \
+        49: b'Marine Craig', \
+        88: b'Mecha Timmy', \
+        1272: b'Mind Control', \
+        1311: b'Powerfist Dougie', \
+        2251: b'Sizzler Stuart', \
+        1509: b'Alien Queen Red', \
+        38: b'A.W.E.S.O.M.-O 4000', \
+        137: b'Sixth Element Randy', \
+        84: b'Choirboy Butters', \
+        1286: b'Power Bind', \
+        1273: b'Purify', \
+        86: b'Angel Wendy', \
+        1923: b'Cupid Cartman', \
+        2299: b'Dark Angel Red', \
+        208: b'Friar Jimmy', \
+        51: b'Hercules Clyde', \
+        138: b'Hermes Kenny', \
+        31: b'Poseidon Stan', \
+        1277: b'Regeneration', \
+        132: b'Scout Ike', \
+        1218: b'Youth Pastor Craig', \
+        158: b'Zen Cartman', \
+        1307: b'Energy Staff', \
+        85: b'Hallelujah', \
+        1983: b'Imp Tweek', \
+        2217: b'Jesus', \
+        1804: b'Medusa Bebe', \
+        1504: b'Prophet Dougie', \
+        1216: b'The Master Ninjew', \
+        201: b'Witch Doctor Token', \
+        44: b'Sexy Nun Randy', \
+        1274: b'Unholy Combustion', \
+        87: b'Pope Timmy', \
+        2043: b'Priest Maxi', \
+        57: b'Paladin Butters', \
+        37: b'Princess Kenny', \
+        1686: b'Underpants Gnomes', \
+        1806: b'Blood Elf Bebe', \
+        144: b'Canadian Knight Ike', \
+        91: b'Catapult Timmy', \
+        61: b'Dark Mage Craig', \
+        2042: b'Elven King Bradley', \
+        141: b'Shieldmaiden Wendy', \
+        29: b'Stan the Great', \
+        1656: b'Chicken Coop', \
+        2295: b'City Wok Guy', \
+        1972: b'Dragonslayer Red', \
+        1506: b'Dwarf Engineer Dougie', \
+        179: b'Dwarf King Clyde', \
+        89: b'Kyle of the Drow Elves', \
+        206: b'Le Bard Jimmy', \
+        47: b'Robin Tweek', \
+        54: b'Rogue Token', \
+        135: b'The Amazingly Randy', \
+        176: b'Witch Garrison', \
+        2035: b'Mr. Slave Executioner', \
+        2210: b'Sorceress Liane', \
+        1655: b'Transmogrify', \
+        1472: b'Cock Magic', \
+        32: b'Grand Wizard Cartman', \
+        2200: b'Captain Diabetes', \
+        2316: b'Chaos Hamsters', \
+        2117: b'Super Fart', \
+        2130: b'The Chomper', \
+        2132: b'Fastpass', \
+        2190: b'Lava!', \
+        2091: b'Mosquito', \
+        2202: b'Professor Chaos', \
+        2262: b'Super Craig', \
+        2144: b'Toolshed', \
+        2195: b'Doctor Timothy', \
+        2290: b'General Disarray', \
+        2143: b'Human Kite', \
+        2216: b'Mintberry Crunch', \
+        2098: b'Tupperware', \
+        2261: b'Wonder Tweek', \
+        2147: b'Mysterion', \
+        2141: b'The Coon', \
+        2136: b'Call Girl', \
+        1674: b'DogPoo', \
+        1872: b'Mr. Hankey', \
+        1666: b'Nelly', \
+        1407: b'Rat Swarm', \
+        1947: b'Towelie', \
+        1869: b'Marcus', \
+        2258: b'Mayor McDaniels', \
+        2074: b'Mr Mackey', \
+        15: b'Nathan', \
+        1886: b'PC Principal', \
+        1684: b'Pigeon Gang', \
+        1670: b'Starvin\' Marvin', \
+        1680: b'Terrance and Phillip', \
+        1665: b'Terrance Mephesto', \
+        1682: b'Big Gay Al', \
+        1973: b'Classi', \
+        1661: b'Mimsy', \
+        2030: b'President Garrison', \
+        2081: b'Santa Claus', \
+        1683: b'Officer Barbrady', \
+        2080: b'Satan', \
+        1672: b'ManBearPig'}
 
 class SPPDFilter:
 
@@ -155,8 +320,6 @@ class SPPDFilter:
 ##                                break
                         if flow.request.url.startswith('https://ubistatic-a.akamaihd.net/0081/'):
                                 break
-##                        if flow.request.url == 'https://msr-public-ubiservices.ubi.com/v2/profiles/ece1f966-ec43-44f5-89dd-9d2e98fba81e/events':
-##                                break
 ##                        if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/'):
 ##                                break
 ##                        if flow.request.url.startswith('https://ubistatic-a.akamaihd.net/0081/stable/726560_2_a759a44bc098309da118e838391d356e/'):
@@ -193,6 +356,276 @@ class SPPDFilter:
                                 break
                         if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/profiles/names':
                                 break
+                        if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] == False:
+                                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/'):
+                                        break
+                                if flow.request.url.startswith('https://msr-public-ubiservices.ubi.com/v2/profiles/'):
+                                        break
+                        if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] == True:
+
+# Free pack logic here
+                                if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/cardpack/cardpacks/free':
+                                        debug_time_start = time.time()
+                                        cards_field_i = 1512
+                                        cards_field = [{"id": 1407,"quantity": 0}]
+                                        while cards_field_i <= 1512:
+                                                cards_field.append({"id": cards_field_i,"quantity": 1})
+                                                cards_field_i += 1
+##                                        cards_field = [{"id": 1407,"quantity": 0}, \
+##                                                       {"id": cards_field_base+1,"quantity": 1}, \
+##                                                       {"id": cards_field_base+2,"quantity": 1}, \
+##                                                       {"id": cards_field_base+3,"quantity": 1}, \
+##                                                       {"id": cards_field_base+4,"quantity": 1}, \
+##                                                       {"id": cards_field_base+5,"quantity": 1}, \
+##                                                       {"id": cards_field_base+6,"quantity": 1}, \
+##                                                       {"id": cards_field_base+7,"quantity": 1}, \
+##                                                       {"id": cards_field_base+8,"quantity": 1}, \
+##                                                       {"id": cards_field_base+9,"quantity": 1}, \
+##                                                       {"id": cards_field_base+10,"quantity": 1}]
+##                                        cards_field = [{"id": 1407,"quantity": 0}, {"id": 210,"quantity": 1}]
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({"contents": {"balance": [],\
+                                                                                                                  "cards": cards_field,\
+                                                                                                                  "gear": [],\
+                                                                                                                  "items": []},\
+                                                                                                     "next_timestamp": int(time.time())}).encode())
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
+##                                        mitmproxy.ctx.log.info('custom response took ' + str((time.time() - debug_time_start)) + ' seconds')
+                                        break
+                                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/techtree/cards/') and \
+                                   (flow.request.url.endswith('/evolve') or flow.request.url.endswith('/upgrade')):
+                                        
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({}).encode())
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
+                                        break
+                                                               
+                                        
+                        # cards
+                        # 1 - Interrupts reading deck information and colours mini deck view
+                        #8: b'Medicine Woman Sharon', \
+                        #10: b'Pocahontas Randy', \
+                        #12: b'Stan of Many Moons', \
+                        # 13 - Mimsy
+                        # 14 - Stan of Many Moons
+                        #15: b'Nathan', \
+                        # 16 - Sheriff Cartman
+                        # 20 - Sheriff Cartman
+                        # 23 - Stan of Many Moons
+                        #24: b'Fireball', \
+                        #27: b'Deckhand Butters', \
+                        #28: b'Outlaw Tweek', \
+                        #29: b'Stan the Great', \
+                        #30: b'Program Stan', \
+                        #31: b'Poseidon Stan', \
+                        #32: b'Grand Wizard Cartman', \
+                        # 33 - Indian Hunter
+                        # 34 - Indian Brave
+                        #35: b'Gunslinger Kyle', \
+                        # 36 - Bounty Hunter Kyle
+                        #37: b'Princess Kenny', \
+                        #38: b'A.W.E.S.O.M.-O 4000', \
+                        # 39 - Little Choirboy
+                        #40: b'Freeze Ray', \
+                        #44: b'Sexy Nun Randy', \
+                        #45: b'Sheriff Cartman', \
+                        #46: b'Warboy Tweek', \
+                        #47: b'Robin Tweek', \
+                        #48: b'Incan Craig', \
+                        #49: b'Marine Craig', \
+                        #50: b'Hookhand Clyde', \
+                        #51: b'Hercules Clyde', \
+                        #52: b'Ice Sniper Wendy', \
+                        #54: b'Rogue Token', \
+                        #55: b'Astronaut Butters', \
+                        # 56 - Pocahontas Randy
+                        #57: b'Paladin Butters', \
+                        # 59 - ??? (Tank, Neutral, Common)
+                        # 60 - Sheriff Cartman
+                        #61: b'Dark Mage Craig', \
+                        # 62 - ??? (Tank, Neutral, Common)
+                        # 63 - Stan of Many Moons
+                        # 64 - ??? (Tank, Neutral, Common)
+                        # 65 - Poseidon Stan
+                        # 66 - ??? (Ranged, Fantasy, Rare)
+                        # 67 - Paladin Butters
+                        # 68 - Rogue Token
+                        # 69 - MISSING:DF_NAME_KENNYGEN
+                        # 70 - Deckhand Butters
+                        # 71 - Stan the Great
+                        # 72 - MISSING:DF_NAME_TWEEKGEN
+                        # 73 - Program Stan
+                        # 75 - Grand Wizard Cartman
+                        # 76 - Astronaut Butters
+                        # 77 - Nathan
+                        # 78 - Mimsy
+                        # 79 - Pocahontas Randy
+                        # 80 - Medicine Woman Sharon
+                        #84: b'Choirboy Butters', \
+                        #85: b'Hallelujah', \
+                        #86: b'Angel Wendy', \
+                        #87: b'Pope Timmy', \
+                        #88: b'Mecha Timmy', \
+                        #89: b'Kyle of the Drow Elves', \
+                        #91: b'Catapult Timmy', \
+                        #92: b'Pirate Ship Timmy', \
+                        #131: b'Smuggler Ike', \
+                        #132: b'Scout Ike', \
+                        #133: b'Gizmo Ike', \
+                        #134: b'Inuit Kenny', \
+                        #135: b'The Amazingly Randy', \
+                        #137: b'Sixth Element Randy', \
+                        #138: b'Hermes Kenny', \
+                        #140: b'Captain Wendy', \
+                        #141: b'Shieldmaiden Wendy', \
+                        # 143 - Imp Tweek
+                        #144: b'Canadian Knight Ike', \
+                        #146: b'Cyborg Kenny', \
+                        #158: b'Zen Cartman', \
+                        #176: b'Witch Garrison', \
+                        #179: b'Dwarf King Clyde', \
+                        # 182 - Gizmo Ike
+                        # 184 - Gizmo Ike
+                        # 185 - Gizmo Ike
+                        #186: b'Lightning Bolt', \
+                        #193: b'Alien Clyde', \
+                        #200: b'Shaman Token', \
+                        #201: b'Witch Doctor Token', \
+                        #203: b'Space Warrior Token', \
+                        #205: b'Storyteller Jimmy', \
+                        #206: b'Le Bard Jimmy', \
+                        #208: b'Friar Jimmy', \
+                        #209: b'Enforcer Jimmy', \
+                        #1216: b'The Master Ninjew', \
+                        #1218: b'Youth Pastor Craig', \
+                        #1269: b'Hyperdrive', \
+                        #1272: b'Mind Control', \
+                        #1273: b'Purify', \
+                        #1274: b'Unholy Combustion', \
+                        #1276: b'Arrowstorm', \
+                        #1277: b'Regeneration', \
+                        # 1278 - MISSING:DF_NAME_SPELLDARKRESURRECT
+                        #1286: b'Power Bind', \
+                        #1288: b'Barrel Dougie', \
+                        # 1298 - Arrow Tower
+                        #1307: b'Energy Staff', \
+                        #1311: b'Powerfist Dougie', \
+                        # 1319 - Inuit Kenny
+                        # 1320 - Gunslinger Kyle
+                        # 1321 - Sheriff Cartman
+                        # 1324 - Medicine Woman Sharon
+                        # 1331 - Indian Brute
+                        # 1404 - A Rat
+                        # 1405 - A Rat
+                        # 1406 - A Rat
+                        #1407: b'Rat Swarm', \
+                        # 1423 - Cyborg Kenny
+                        # 1426 - Space Grunt
+                        # 1427 - Space Gunner
+                        # 1428 - Cyborg Titan
+                        # 1434 - Gizmo Ike
+                        # 1435 - Cyborg Kenny
+                        # 1437 - Enforcer Jimmy
+                        # 1439 - Ice Sniper Wendy
+                        # 1440 - Mecha Timmy
+                        # 1441 - Indian Brave
+                        # 1442 - Alien Clyde
+                        # 1444 - Gizmo Ike
+                        # 1445 - MISSING:DF_NAME_SPELLRATATTACKFAN
+                        # 1446 - A Rat
+                        # 1447 - A Rat
+                        # 1448 - A Rat
+                        # 1449 - Cyborg Kenny
+                        # 1451 - Enforcer Jimmy
+                        # 1453 - Program Stan
+                        # 1454 - Powerfist Dougie
+                        # 1455 - Ice Sniper Wendy
+                        # 1456 - A Cock
+                        # 1470 - Arrow Tower
+                        ##1472: b'Cock Magic', \
+                        # 1473 - Storyteller Jimmy
+                        # 1474 - Captain Wendy
+                        # 1484 - Barrel Dougie
+                        # 1485 - Hookhand Clyde
+                        ##1504: b'Prophet Dougie', \
+                        ##1506: b'Dwarf Engineer Dougie', \
+                        ##1509: b'Alien Queen Red', \
+                        # 1512 - Choirboy Butters
+                        ##1655: b'Transmogrify', \
+                        ##1656: b'Chicken Coop', \
+                        ##1657: b'Poison', \
+                        ##1661: b'Mimsy', \
+                        ##1665: b'Terrance Mephesto', \
+                        ##1666: b'Nelly', \
+                        ##1670: b'Starvin\' Marvin', \
+                        ##1672: b'ManBearPig'}
+                        ##1674: b'DogPoo', \
+                        ##1680: b'Terrance and Phillip', \
+                        ##1682: b'Big Gay Al', \
+                        ##1683: b'Officer Barbrady', \
+                        ##1684: b'Pigeon Gang', \
+                        ##1686: b'Underpants Gnomes', \
+                        ##1700: b'Bandita Sally', \
+                        ##1701: b'Calamity Heidi', \
+                        ##1804: b'Medusa Bebe', \
+                        ##1805: b'Robo Bebe', \
+                        ##1806: b'Blood Elf Bebe', \
+                        ##1808: b'Buccaneer Bebe', \
+                        ##1813: b'Visitors', \
+                        ##1824: b'Four-Assed Monkey', \
+                        ##1869: b'Marcus', \
+                        ##1872: b'Mr. Hankey', \
+                        ##1886: b'PC Principal', \
+                        ##1923: b'Cupid Cartman', \
+                        ##1947: b'Towelie', \
+                        ##1949: b'Bounty Hunter Kyle', \
+                        ##1972: b'Dragonslayer Red', \
+                        ##1973: b'Classi', \
+                        ##1983: b'Imp Tweek', \
+                        ##2013: b'Swordsman Garrison', \
+                        ##2030: b'President Garrison', \
+                        ##2035: b'Mr. Slave Executioner', \
+                        ##2042: b'Elven King Bradley', \
+                        ##2043: b'Priest Maxi', \
+                        ##2044: b'Swashbuckler Red', \
+                        ##2074: b'Mr Mackey', \
+                        ##2080: b'Satan', \
+                        ##2081: b'Santa Claus', \
+                        ##2091: b'Mosquito', \
+                        ##2098: b'Tupperware', \
+                        ##2101: b'Alien Drone', \
+                        ##2114: b'Sharpshooter Shelly', \
+                        ##2117: b'Super Fart', \
+                        ##2130: b'The Chomper', \
+                        ##2132: b'Fastpass', \
+                        ##2136: b'Call Girl', \
+                        ##2141: b'The Coon', \
+                        ##2143: b'Human Kite', \
+                        ##2144: b'Toolshed', \
+                        ##2147: b'Mysterion', \
+                        ##2190: b'Lava!', \
+                        ##2195: b'Doctor Timothy', \
+                        ##2200: b'Captain Diabetes', \
+                        ##2202: b'Professor Chaos', \
+                        ##2209: b'Big Mesquite Murph', \
+                        ##2210: b'Sorceress Liane', \
+                        ##2216: b'Mintberry Crunch', \
+                        ##2217: b'Jesus', \
+                        ##2251: b'Sizzler Stuart', \
+                        ##2258: b'Mayor McDaniels', \
+                        ##2261: b'Wonder Tweek', \
+                        ##2262: b'Super Craig', \
+                        ##2266: b'Thunderbird', \
+                        ##2290: b'General Disarray', \
+                        ##2295: b'City Wok Guy', \
+                        ##2299: b'Dark Angel Red', \
+                        ##2308: b'Space Pilot Bradley', \
+                        ##2316: b'Chaos Hamsters', \
+
+
+                        
+##                                        break
+                                
                         
                         
                         
@@ -201,7 +634,7 @@ class SPPDFilter:
                         break
         def response(self, flow):
 ##                mitmproxy.ctx.log.info('flow.request.url == ' + repr(flow.request.url))
-                if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start':
+                if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] and flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start':
                         o = json.loads(flow.response.content.decode())
 ##                        mitmproxy.ctx.log.info('len(flow.response.content) == ' + repr(len(flow.response.content)))
                         if 'pvp' in o:
@@ -428,247 +861,40 @@ class SPPDFilter:
                                 del o['player_data']['store']
                         if 'decks' in o['player_data']:
                                 del o['player_data']['decks']
-        
+##                        DEF_CUSTOM_CARDS_temp = 144
+##                        DEF_CUSTOM_CARDS[0] = [DEF_CUSTOM_CARDS_temp*10 + 1,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 2,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 3,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 4,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 5,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 6,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 7,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 8,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 9,\
+##                                            DEF_CUSTOM_CARDS_temp*10 + 10]
+                        o['player_data']['decks'] = {'0': DEF_CUSTOM_CARDS[0]}
 
 
-                        CharacterNames = {\
-                        1701: b'Calamity Heidi', \
-                        1700: b'Bandita Sally', \
-                        131: b'Smuggler Ike', \
-                        140: b'Captain Wendy', \
-                        27: b'Deckhand Butters', \
-                        35: b'Gunslinger Kyle', \
-                        50: b'Hookhand Clyde', \
-                        92: b'Pirate Ship Timmy', \
-                        200: b'Shaman Token', \
-                        2114: b'Sharpshooter Shelly', \
-                        205: b'Storyteller Jimmy', \
-                        1276: b'Arrowstorm', \
-                        1288: b'Barrel Dougie', \
-                        1808: b'Buccaneer Bebe', \
-                        134: b'Inuit Kenny', \
-                        186: b'Lightning Bolt', \
-                        28: b'Outlaw Tweek', \
-                        8: b'Medicine Woman Sharon', \
-                        45: b'Sheriff Cartman', \
-                        12: b'Stan of Many Moons', \
-                        2044: b'Swashbuckler Red', \
-                        2266: b'Thunderbird', \
-                        2209: b'Big Mesquite Murph', \
-                        48: b'Incan Craig', \
-                        10: b'Pocahontas Randy', \
-                        24: b'Fireball', \
-                        2013: b'Swordsman Garrison', \
-                        55: b'Astronaut Butters', \
-                        209: b'Enforcer Jimmy', \
-                        203: b'Space Warrior Token', \
-                        193: b'Alien Clyde', \
-                        1949: b'Bounty Hunter Kyle', \
-                        1824: b'Four-Assed Monkey', \
-                        40: b'Freeze Ray', \
-                        133: b'Gizmo Ike', \
-                        52: b'Ice Sniper Wendy', \
-                        1657: b'Poison', \
-                        30: b'Program Stan', \
-                        1805: b'Robo Bebe', \
-                        2308: b'Space Pilot Bradley', \
-                        1813: b'Visitors', \
-                        46: b'Warboy Tweek', \
-                        2101: b'Alien Drone', \
-                        146: b'Cyborg Kenny', \
-                        1269: b'Hyperdrive', \
-                        49: b'Marine Craig', \
-                        88: b'Mecha Timmy', \
-                        1272: b'Mind Control', \
-                        1311: b'Powerfist Dougie', \
-                        2251: b'Sizzler Stuart', \
-                        1509: b'Alien Queen Red', \
-                        38: b'A.W.E.S.O.M.-O 4000', \
-                        137: b'Sixth Element Randy', \
-                        84: b'Choirboy Butters', \
-                        1286: b'Power Bind', \
-                        1273: b'Purify', \
-                        86: b'Angel Wendy', \
-                        1923: b'Cupid Cartman', \
-                        2299: b'Dark Angel Red', \
-                        208: b'Friar Jimmy', \
-                        51: b'Hercules Clyde', \
-                        138: b'Hermes Kenny', \
-                        31: b'Poseidon Stan', \
-                        1277: b'Regeneration', \
-                        132: b'Scout Ike', \
-                        1218: b'Youth Pastor Craig', \
-                        158: b'Zen Cartman', \
-                        1307: b'Energy Staff', \
-                        85: b'Hallelujah', \
-                        1983: b'Imp Tweek', \
-                        2217: b'Jesus', \
-                        1804: b'Medusa Bebe', \
-                        1504: b'Prophet Dougie', \
-                        1216: b'The Master Ninjew', \
-                        201: b'Witch Doctor Token', \
-                        44: b'Sexy Nun Randy', \
-                        1274: b'Unholy Combustion', \
-                        87: b'Pope Timmy', \
-                        2043: b'Priest Maxi', \
-                        57: b'Paladin Butters', \
-                        37: b'Princess Kenny', \
-                        1686: b'Underpants Gnomes', \
-                        1806: b'Blood Elf Bebe', \
-                        144: b'Canadian Knight Ike', \
-                        91: b'Catapult Timmy', \
-                        61: b'Dark Mage Craig', \
-                        2042: b'Elven King Bradley', \
-                        141: b'Shieldmaiden Wendy', \
-                        29: b'Stan the Great', \
-                        1656: b'Chicken Coop', \
-                        2295: b'City Wok Guy', \
-                        1972: b'Dragonslayer Red', \
-                        1506: b'Dwarf Engineer Dougie', \
-                        179: b'Dwarf King Clyde', \
-                        89: b'Kyle of the Drow Elves', \
-                        206: b'Le Bard Jimmy', \
-                        47: b'Robin Tweek', \
-                        54: b'Rogue Token', \
-                        135: b'The Amazingly Randy', \
-                        176: b'Witch Garrison', \
-                        2035: b'Mr. Slave Executioner', \
-                        2210: b'Sorceress Liane', \
-                        1655: b'Transmogrify', \
-                        1472: b'Cock Magic', \
-                        32: b'Grand Wizard Cartman', \
-                        2200: b'Captain Diabetes', \
-                        2117: b'Super Fart', \
-                        2130: b'The Chomper', \
-                        2132: b'Fastpass', \
-                        2190: b'Lava!', \
-                        2091: b'Mosquito', \
-                        2202: b'Professor Chaos', \
-                        2262: b'Super Craig', \
-                        2144: b'Toolshed', \
-                        2195: b'Doctor Timothy', \
-                        2290: b'General Disarray', \
-                        2143: b'Human Kite', \
-                        2216: b'Mintberry Crunch', \
-                        2098: b'Tupperware', \
-                        2261: b'Wonder Tweek', \
-                        2147: b'Mysterion', \
-                        2141: b'The Coon', \
-                        2136: b'Call Girl', \
-                        1674: b'DogPoo', \
-                        1872: b'Mr. Hankey', \
-                        1666: b'Nelly', \
-                        1407: b'Rat Swarm', \
-                        1947: b'Towelie', \
-                        1869: b'Marcus', \
-                        2258: b'Mayor McDaniels', \
-                        2074: b'Mr Mackey', \
-                        15: b'Nathan', \
-                        1886: b'PC Principal', \
-                        1684: b'Pigeon Gang', \
-                        1670: b'Starvin\' Marvin', \
-                        1680: b'Terrance and Phillip', \
-                        1665: b'Terrance Mephesto', \
-                        1682: b'Big Gay Al', \
-                        1973: b'Classi', \
-                        1661: b'Mimsy', \
-                        2030: b'President Garrison', \
-                        2081: b'Santa Claus', \
-                        1683: b'Officer Barbrady', \
-                        2080: b'Satan', \
-                        1672: b'ManBearPig'}
 
-                        upgradedict = {\
-                                'lvl 1, 1/5': {'s': 0, 'c': 0, 'x': 0, 'w': 1.0},\
-                                'lvl 1, 2/5': {'s': 0, 'c': 0, 'x': 1, 'w': 1.0},\
-                                'lvl 1, 3/5': {'s': 0, 'c': 0, 'x': 2, 'w': 1.0},\
-                                'lvl 1, 4/5': {'s': 0, 'c': 0, 'x': 3, 'w': 1.0},\
-                                'lvl 1, 5/5': {'s': 0, 'c': 0, 'x': 4, 'w': 1.0},\
-                                'lvl 2, 5/15': {'s': 1, 'c': 0, 'x': 0, 'w': 2.0},\
-                                'lvl 2, 6/15': {'s': 1, 'c': 0, 'x': 1, 'w': 2.0},\
-                                'lvl 2, 7/15': {'s': 1, 'c': 0, 'x': 2, 'w': 2.0},\
-                                'lvl 2, 8/15': {'s': 1, 'c': 0, 'x': 3, 'w': 2.0},\
-                                'lvl 2, 9/15': {'s': 1, 'c': 0, 'x': 4, 'w': 2.0},\
-                                'lvl 2, 10/15': {'s': 1, 'c': 0, 'x': 5, 'w': 2.0},\
-                                'lvl 2, 11/15': {'s': 1, 'c': 0, 'x': 6, 'w': 2.0},\
-                                'lvl 2, 12/15': {'s': 1, 'c': 0, 'x': 7, 'w': 2.0},\
-                                'lvl 2, 13/15': {'s': 1, 'c': 0, 'x': 8, 'w': 2.0},\
-                                'lvl 2, 14/15': {'s': 1, 'c': 0, 'x': 9, 'w': 2.0},\
-                                'lvl 2, 15/15': {'s': 1, 'c': 0, 'x': 10, 'w': 2.0},\
-                                'lvl 3, 15/25': {'s': 2, 'c': 0, 'x': 0, 'w': 3.0},\
-                                'lvl 3, 16/25': {'s': 2, 'c': 0, 'x': 1, 'w': 3.0},\
-                                'lvl 3, 17/25': {'s': 2, 'c': 0, 'x': 2, 'w': 3.0},\
-                                'lvl 3, 18/25': {'s': 2, 'c': 0, 'x': 3, 'w': 3.0},\
-                                'lvl 3, 19/25': {'s': 2, 'c': 0, 'x': 4, 'w': 3.0},\
-                                'lvl 3, 20/25': {'s': 2, 'c': 0, 'x': 5, 'w': 3.0},\
-                                'lvl 3, 21/25': {'s': 2, 'c': 0, 'x': 6, 'w': 3.0},\
-                                'lvl 3, 22/25': {'s': 2, 'c': 0, 'x': 7, 'w': 3.0},\
-                                'lvl 3, 23/25': {'s': 2, 'c': 0, 'x': 8, 'w': 3.0},\
-                                'lvl 3, 24/25': {'s': 2, 'c': 0, 'x': 9, 'w': 3.0},\
-                                'lvl 3, 25/25': {'s': 2, 'c': 0, 'x': 10, 'w': 3.0},\
-                                'lvl 4, 25/40': {'s': 3, 'c': 0, 'x': 0, 'w': 4.0},\
-                                'lvl 4, 26/40': {'s': 3, 'c': 0, 'x': 1, 'w': 4.0},\
-                                'lvl 4, 27/40': {'s': 3, 'c': 0, 'x': 2, 'w': 4.0},\
-                                'lvl 4, 28/40': {'s': 3, 'c': 0, 'x': 3, 'w': 4.0},\
-                                'lvl 4, 29/40': {'s': 3, 'c': 0, 'x': 4, 'w': 4.0},\
-                                'lvl 4, 30/40': {'s': 3, 'c': 0, 'x': 5, 'w': 4.0},\
-                                'lvl 4, 31/40': {'s': 3, 'c': 0, 'x': 6, 'w': 4.0},\
-                                'lvl 4, 32/40': {'s': 3, 'c': 0, 'x': 7, 'w': 4.0},\
-                                'lvl 4, 33/40': {'s': 3, 'c': 0, 'x': 8, 'w': 4.0},\
-                                'lvl 4, 34/40': {'s': 3, 'c': 0, 'x': 9, 'w': 4.0},\
-                                'lvl 4, 35/40': {'s': 3, 'c': 0, 'x': 10, 'w': 4.0},\
-                                'lvl 4, 36/40': {'s': 3, 'c': 0, 'x': 11, 'w': 4.0},\
-                                'lvl 4, 37/40': {'s': 3, 'c': 0, 'x': 12, 'w': 4.0},\
-                                'lvl 4, 38/40': {'s': 3, 'c': 0, 'x': 13, 'w': 4.0},\
-                                'lvl 4, 39/40': {'s': 3, 'c': 0, 'x': 14, 'w': 4.0},\
-                                'lvl 4, 40/40': {'s': 3, 'c': 0, 'x': 15, 'w': 4.0},\
-                                'lvl 5, 40/55': {'s': 4, 'c': 0, 'x': 0, 'w': 5.0},\
-                                'lvl 5, 41/55': {'s': 4, 'c': 0, 'x': 1, 'w': 5.0},\
-                                'lvl 5, 42/55': {'s': 4, 'c': 0, 'x': 2, 'w': 5.0},\
-                                'lvl 5, 43/55': {'s': 4, 'c': 0, 'x': 3, 'w': 5.0},\
-                                'lvl 5, 44/55': {'s': 4, 'c': 0, 'x': 4, 'w': 5.0},\
-                                'lvl 5, 45/55': {'s': 4, 'c': 0, 'x': 5, 'w': 5.0},\
-                                'lvl 5, 46/55': {'s': 4, 'c': 0, 'x': 6, 'w': 5.0},\
-                                'lvl 5, 47/55': {'s': 4, 'c': 0, 'x': 7, 'w': 5.0},\
-                                'lvl 5, 48/55': {'s': 4, 'c': 0, 'x': 8, 'w': 5.0},\
-                                'lvl 5, 49/55': {'s': 4, 'c': 0, 'x': 9, 'w': 5.0},\
-                                'lvl 5, 50/55': {'s': 4, 'c': 0, 'x': 10, 'w': 5.0},\
-                                'lvl 5, 51/55': {'s': 4, 'c': 0, 'x': 11, 'w': 5.0},\
-                                'lvl 5, 52/55': {'s': 4, 'c': 0, 'x': 12, 'w': 5.0},\
-                                'lvl 5, 53/55': {'s': 4, 'c': 0, 'x': 13, 'w': 5.0},\
-                                'lvl 5, 54/55': {'s': 4, 'c': 0, 'x': 14, 'w': 5.0},\
-                                'lvl 5, 55/55': {'s': 4, 'c': 0, 'x': 15, 'w': 5.0},\
-                                'lvl 6, 55/70': {'s': 5, 'c': 0, 'x': 0, 'w': 7.0},\
-                                'lvl 6, 56/70': {'s': 5, 'c': 0, 'x': 1, 'w': 7.0},\
-                                'lvl 6, 57/70': {'s': 5, 'c': 0, 'x': 2, 'w': 7.0},\
-                                'lvl 6, 58/70': {'s': 5, 'c': 0, 'x': 3, 'w': 7.0},\
-                                'lvl 6, 59/70': {'s': 5, 'c': 0, 'x': 4, 'w': 7.0},\
-                                'lvl 6, 60/70': {'s': 5, 'c': 0, 'x': 5, 'w': 7.0},\
-                                'lvl 6, 61/70': {'s': 5, 'c': 0, 'x': 6, 'w': 7.0},\
-                                'lvl 6, 62/70': {'s': 5, 'c': 0, 'x': 7, 'w': 7.0},\
-                                'lvl 6, 63/70': {'s': 5, 'c': 0, 'x': 8, 'w': 7.0},\
-                                'lvl 6, 64/70': {'s': 5, 'c': 0, 'x': 9, 'w': 7.0},\
-                                'lvl 6, 65/70': {'s': 5, 'c': 0, 'x': 10, 'w': 7.0},\
-                                'lvl 6, 66/70': {'s': 5, 'c': 0, 'x': 11, 'w': 7.0},\
-                                'lvl 6, 67/70': {'s': 5, 'c': 0, 'x': 12, 'w': 7.0},\
-                                'lvl 6, 68/70': {'s': 5, 'c': 0, 'x': 13, 'w': 7.0},\
-                                'lvl 6, 69/70': {'s': 5, 'c': 0, 'x': 14, 'w': 7.0},\
-                                'lvl 6, 70/70': {'s': 5, 'c': 0, 'x': 15, 'w': 7.0},\
-                                'lvl 7, 70/70': {'s': 6, 'c': 0, 'x': 0, 'w': 7.0},\
-                                '0': {'s': 0, 'c': 0, 'x': 0, 'w': 1.0}}
+                        
                         CharacterIdList = list(CharacterNames)
                         templist = []
                         templist.append({'c': 1, 'id': 1, 'w': 1.1})
                         i = 0
+                        upgrade = upgradedict[DEF_UPGRADE_LEVEL[0]]
+                        elem_s = upgrade['s']
+                        elem_c = upgrade['c']
+                        elem_x = upgrade['x']
+                        elem_w = upgrade['w']
                         while i < len(CharacterIdList):
-                                upgrade = upgradedict[DEF_UPGRADE_LEVEL[0]]
-                                elem_s = upgrade['s']
-                                elem_c = upgrade['c']
-                                elem_x = upgrade['x']
-                                elem_w = upgrade['w']
                                 templist.append({'id': CharacterIdList[i], 's': elem_s, 'c': elem_c, 'x': elem_x, 'w': elem_w})
                                 i += 1
-
+                        ## NPC's are being ignored at session start
+##                        i = 0
+##                        while i < len(DEF_CUSTOM_CARDS[0]):
+##                                templist.append({'id': DEF_CUSTOM_CARDS[0][i], 's': elem_s, 'c': elem_c, 'x': elem_x, 'w': elem_w})
+##                                i += 1
+                        
                         o['player_data']['cards'] = templist
                         
                         flow.response.content = json.dumps(o).encode()
