@@ -2,7 +2,7 @@
 ##
 ## Usage command: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon.py
 ##
-## Somewhat complete mitmproxy API documentation is available by using this command: python.exe -m pydoc mitmproxy
+## Mitmproxy API documentation is available by using this command: python.exe -m pydoc mitmproxy
 ##
 ## On target device change proxy to point at mitmproxy's endpoint (port 8080,
 ## IP address == local IP adress for machine, usually comes in form 192.168.xxx.xxx),
@@ -28,20 +28,25 @@ DEF_USE_CUSTOM_UPGRADE_LEVEL = [False]
 ## if used on fresh SPPD installation. Allows to use SPPD normally.
 ## This addon should be active in order to use guest account.
 
+## Variables below DEF_UPGRADE_LEVEL, DEF_CUSTOM_CARDS, DEF_DAILY_DEAL_LOOT
+## only have effect if DEF_USE_CUSTOM_UPGRADE_LEVEL is set.
+
 DEF_UPGRADE_LEVEL = ['lvl 1, 1/5']
 
 ## Change DEF_UPGRADE_LEVEL variable to change levels and upgrades shown in SPPD deckbuilder
 ## Restart of SPPD app is required after every change.
 
-## Variable DEF_UPGRADE_LEVEL only has effect if DEF_USE_CUSTOM_UPGRADE_LEVEL is set.
-
 ## DEF_UPGRADE_LEVEL does not works with non playable cards, these cards need to loaded into a deck using
 ## DEF_CUSTOM_CARDS variable. In order for non playable cards to show up in deck builder, these cards
-## need to be received with packs first. See free pack logic referenced in code.
+## need to be received from packs first. See free pack logic referenced in code.
 
-DEF_CUSTOM_CARDS = [[66]]
+DEF_CUSTOM_CARDS = [[2316]]
 
 ## DEF_CUSTOM_CARDS loads a list of cards into sppd deck
+
+DEF_DAILY_DEAL_LOOT = [{'items': [262, 1]}]
+
+## DEF_DAILY_DEAL_LOOT places any item of choice in daily deal window
 
 upgradedict = {\
         'lvl 1, 1/5': {'s': 0, 'c': 0, 'x': 0, 'w': 1.0},\
@@ -362,20 +367,43 @@ class SPPDFilter:
                                 if flow.request.url.startswith('https://msr-public-ubiservices.ubi.com/v2/profiles/'):
                                         break
                         if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] == True:
+                                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/store/catalogs?id=7,8,9,10,11,12&'):
+                                        dumped_data = [\
+                                                \
+                                                {'player_data': {'gear': [{'id': 1912}]}, 'name': 'AVATAR_DETAIL_POO', 'offer': {'pop_up_frequency': 0, 'price': [{'code': 'CN', 'value': 0}], 'unlock_override': False, 'id': 3789, 'revision': 0}}, \
+                                                {'player_data': {'gear': [{'id': 1917}]}, 'name': 'AVATAR_GLASSES_RUDOLPH', 'offer': {'pop_up_frequency': 0, 'price': [{'code': 'CN', 'value': 0}], 'unlock_override': False, 'id': 3790, 'revision': 0}}\
+                                                ]
+                                        dumped_data_copy = [{'player_data': {'gear': [{'id': 2173}]}, 'offer': {'price': [{'code': 'CN', 'value': 0}], 'unlock_override': True, 'revision': 0}}]
+                                        
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({'store': [\
+                                                                                                 {'catalog': [], 'category_id': 7, 'revision': 0}, \
+                                                                                                 {'catalog': dumped_data_copy, 'category_id': 8, 'revision': -1}, \
+                                                                                                 {'catalog': [], 'category_id': 9, 'revision': 0}, \
+                                                                                                 {'catalog': [], 'category_id': 10, 'revision': 0}, \
+                                                                                                 {'daily_shop': {'valid_until': (time.time()+60)}, 'catalog': [\
+                                                                                                         {'player_data': DEF_DAILY_DEAL_LOOT[0], \
+                                                                                                          'name': 'DAILY_DEAL_ITEM_181_1', 'purchased': 0, \
+                                                                                                          'offer': { \
+                                                                                                                    'price': [{'code': 'DM', 'value': 0}], 'purchase_limit': 1, 'unlock_override': False, 'id': 4277, 'revision': 0}}], \
+                                                                                                  'category_id': 11}, \
+                                                                                                 {'category_id': 12, 'revision': 0}]}))
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
+                                        break
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+                                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/store/catalogs?id=11&') or \
+                                   flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/store/catalogs/11?'):
+                                        
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({'store': \
+                                                                                                 {'daily_shop': {'valid_until': (time.time()+60)}, 'catalog': [\
+                                                                                                         {'player_data': DEF_DAILY_DEAL_LOOT[0], \
+                                                                                                          'name': 'DAILY_DEAL_ITEM_181_1', 'purchased': 0, \
+                                                                                                          'offer': { \
+                                                                                                                    'price': [{'code': 'DM', 'value': 750}], 'purchase_limit': 1, 'unlock_override': False, 'id': 4277, 'revision': 0}}], \
+                                                                                                  }}))
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
+                                        break
 
 # Free pack logic here
 
@@ -386,16 +414,47 @@ class SPPDFilter:
 ##                                        while cards_field_i <= 2:
 ##                                                cards_field.append({"id": cards_field_i,"quantity": 1})
 ##                                                cards_field_i += 1
+##                                        cards_field.append({"id": 1820,"quantity": 64})
+                                        cards_field.append({"id": 2316,"quantity": 2352})
+##                                        i = 0
+##                                        while i < len(DEF_CUSTOM_CARDS[0]):
+##                                                cards_field.append({"id": DEF_CUSTOM_CARDS[0][i],"quantity": 1})
+##                                                i += 1
                                         gear_field = []
 ##                                        gear_field_i = 153
 ##                                        while gear_field_i <= 153:
 ##                                                gear_field.append({"id": gear_field_i})
 ##                                                gear_field_i += 1
+##                                        items_field_i = 2401
+                                        items_field = []
+##                                        while items_field_i <= 2500:
+##                                                items_field.append(items_field_i)
+##                                                items_field.append(1)
+####                                                items_field_i += 1
+
+                                        ## max out mystical theme legendary
+##                                        items_field.append(223)
+##                                        items_field.append(2365)
+##                                        items_field.append(224)
+##                                        items_field.append(1328)
+##                                        items_field.append(225)
+##                                        items_field.append(524)
+##                                        items_field.append(213)
+##                                        items_field.append(140000)
+                                        ## max out superheroes theme rare
+                                        items_field.append(235)
+                                        items_field.append(1297)
+                                        items_field.append(236)
+                                        items_field.append(782)
+                                        items_field.append(237)
+                                        items_field.append(259)
+                                        items_field.append(213)
+                                        items_field.append(65385)
                                         flow.response = mitmproxy.http.HTTPResponse.make(200, \
                                                                                          json.dumps({"contents": {"balance": [],\
                                                                                                                   "cards": cards_field,\
                                                                                                                   "gear": gear_field,\
-                                                                                                                  "items": []},\
+                                                                                                                  "items": items_field},\
                                                                                                      "next_timestamp": int(time.time())}).encode())
                                         mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
 ##                                        mitmproxy.ctx.log.info('custom response took ' + str((time.time() - debug_time_start)) + ' seconds')
@@ -407,9 +466,51 @@ class SPPDFilter:
                                                                                          json.dumps({}).encode())
                                         mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
                                         break
-                                                               
+
+
+
+
+                        # items (overlaps with gear id list)
+
+                        # 213 - Coins
+                        # 214 - Cash
+                        # 215 - Ancient Fossil
+                        # 216 - Power Serum
+                        # 217 - Tome of Knowledge
+                        # 218 - MISSING:DF_CARD_ITEM_GEN_3
+                        # 219 - Indian Feather
+                        # 220 - Arrowhead
+                        # 221 - Sheriff's Star
+                        # 222 - MISSING:DF_CARD_ITEM_ADV_3
+                        # 223 - Holy Candle
+                        # 224 - Prayer Beads
+                        # 225 - Fancy Dreidel
+                        # 226 - MISSING:DF_CARD_ITEM_MYS_3
+                        # 227 - Top Secret Chip
+                        # 228 - Alien Hand
+                        # 229 - Futuristic Robot
+                        # 230 - MISSING:DF_CARD_ITEM_SCI_3
+                        # 231 - Ancient Key
+                        # 232 - Mage's Tome
+                        # 233 - Ring of Power
+                        # 234 - MISSING:DF_CARD_ITEM_FAN_3
+                        # 235 - Toxic Waste
+                        # 236 - Energy Drink
+                        # 237 - Comics
+                        # 238 - MISSING:DF_CARD_ITEM_SUP_3
+                        # 239-250 - ??? game crashes on pack opening, daily deal window shows nothing
+                        # 253 - PvP Tickets
+                        # 259 - MISSING:COINSLVL1CARD
+                        # 260 - Bottle Caps
+                        # 261 - Battle Tokens
+                        # 262 - Eternity Gems
+                        # 263 - Phones Destroyed:
 
                         # gear
+
+                        # gear marked with ??? are cosmetics that can be only accessed at avatar section and crashes elsewhere.
+
+                        
                         # 153 - MISSING:DF_NAME_NAKEDSHIRT
                         # 155 - Cowboy Hat
                         # 180 - Knight Outfit
@@ -433,16 +534,95 @@ class SPPDFilter:
                         # 1336 - Alien Costume
                         # 1337 - Alien Hat
                         # 1341 - Goth Shirt
-                        # 1540-1555 - ??? Card does not open, can't navigate away from pack, animations are still working
+                        # 1540 - ??? AVATAR_HAIR_ROCK_STAR
+                        # 1541 - ??? AVATAR_MOUTH_ICK_MOUTH
+                        # 1542 - ??? AVATAR_GLASSES_KITTY
+                        # 1543 - ??? AVATAR_EYE_CRAZY
+                        # 1544 - ??? AVATAR_BEARD_SANTA_CLAUS
+                        # 1545 - ??? AVATAR_EYE_BROWS_SUSPICIOUS
+                        # 1546 - ??? AVATAR_DETAIL_FRECKLES_LOW
+                        # 1547 - ??? AVATAR_DETAIL_STICHES_RIGHT
+                        # 1548 - ??? AVATAR_EYE_BROWS_ANGRY
+                        # 1549 - ??? AVATAR_EYE_NERVOUS
+                        # 1550 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_CHINESE
+                        # 1551 - ??? AVATAR_GLASSES_BATMAN
+                        # 1552 - ??? AVATAR_HAIR_MEDIUM_TIED_RASTA
+                        # 1553 - ??? AVATAR_MOUTH_OPEN
+                        # 1554 - ??? AVATAR_EYE_BASIC
+                        # 1555 - ??? AVATAR_MOUTH_DEFAULT
                         # 1556 - MISSING:DF_NAME_NAKEDLADY
-                        # 1558 - ??? 
-                        # 1560-1562 - ??? 
-                        # 1564-1566 - ??? 
-                        # 1568-1621 - ??? 
-                        # 1623-1628 - ???
-                        # 1635 - ???
-                        # 1639-1640 - ???
-                        # 1668-1669 - ???
+                        # 1558 - ??? AVATAR_DETAIL_BAND_AID_LEFT                
+                        # 1560 - ??? AVATAR_DETAIL_BUNNY_MOUTH
+                        # 1561 - ??? AVATAR_DETAIL_CUT_RIGHT
+                        # 1562 - ??? AVATAR_DETAIL_FOOTBALL         
+                        # 1564 - ??? AVATAR_EYE_BROWS_CLASSIC_THICK
+                        # 1565 - ??? AVATAR_EYE_BROWS_PUZZLED
+                        # 1566 - ??? AVATAR_EYE_SAD_HAPPY
+                        # 1568 - ??? AVATAR_EYE_ASIAN
+                        # 1569 - ??? AVATAR_EYE_EYELINER
+                        # 1570 - ??? AVATAR_EYE_RED
+                        # 1571 - ??? AVATAR_EYE_SLEEPY
+                        # 1572 - ??? AVATAR_EYE_LASHES_ONE
+                        # 1573 - ??? AVATAR_FACIAL_HAIR_BEARD_JAAKKO
+                        # 1574 - ??? AVATAR_FACIAL_HAIR_BEARD_KLINGON
+                        # 1575 - ??? AVATAR_FACIAL_HAIR_BEARD_MEDIUM
+                        # 1576 - ??? AVATAR_FACIAL_HAIR_BEARD_PETITE_GOATEE
+                        # 1577 - ??? AVATAR_FACIAL_HAIR_BEARD_SMALL
+                        # 1578 - ??? AVATAR_FACIAL_HAIR_BEARD_THIN
+                        # 1579 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_BASIC
+                        # 1580 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_FRENCH
+                        # 1581 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_GENTLEMAN
+                        # 1582 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_SPANISH
+                        # 1583 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_THICK
+                        # 1584 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_VILLAIN
+                        # 1585 - ??? AVATAR_FACIAL_HAIR_MUTTON_CHOPS_THICK
+                        # 1586 - ??? AVATAR_FACIAL_HAIR_STUBBLE_BASIC
+                        # 1587 - ??? AVATAR_FACIAL_HAIR_STUBBLE_BEARDED
+                        # 1588 - ??? AVATAR_FACIAL_HAIR_STUBBLE_THICK
+                        # 1589 - ??? AVATAR_GLASSES_COFFIN
+                        # 1590 - ??? AVATAR_GLASSES_DOUGIE
+                        # 1591 - ??? AVATAR_GLASSES_KITTY_SHINY
+                        # 1592 - ??? AVATAR_GLASSES_MALCOM_X
+                        # 1593 - ??? AVATAR_GLASSES_MONOCLE
+                        # 1594 - ??? AVATAR_GLASSES_RECTANGLE
+                        # 1595 - ??? AVATAR_GLASSES_RECTANGLE_SHINY
+                        # 1596 - ??? AVATAR_GLASSES_SHADES_BASIC
+                        # 1597 - ??? AVATAR_GLASSES_SHADES_OVAL
+                        # 1598 - ??? AVATAR_GLASSES_SHADES_SUPER_STAR
+                        # 1599 - ??? AVATAR_GLASSES_SPECTACLE
+                        # 1600 - ??? AVATAR_GLASSES_SPECTACLE_SHINY
+                        # 1601 - ??? AVATAR_GLASSES_THIN
+                        # 1602 - ??? AVATAR_GLASSES_THIN_SHINY
+                        # 1603 - ??? AVATAR_GLASSES_WIRE_FRAMES
+                        # 1604 - ??? AVATAR_GLASSES_WIRE_FRAMES_SQUARE
+                        # 1605 - ??? AVATAR_HAIR_LONG_PIGTAIL
+                        # 1606 - ??? AVATAR_HAIR_LONG_SEVENTIES
+                        # 1607 - ??? AVATAR_HAIR_LONG_STRAIGHTENED
+                        # 1608 - ??? AVATAR_HAIR_LONG_WAVY
+                        # 1609 - ??? AVATAR_HAIR_MEDIUM_BABY_GIRL
+                        # 1610 - ??? AVATAR_HAIR_MEDIUM_ELLEN
+                        # 1611 - ??? AVATAR_HAIR_MEDIUM_ROCK_STAR
+                        # 1612 - ??? AVATAR_HAIR_MEDIUM_SKATER
+                        # 1613 - ??? AVATAR_HAIR_MEDIUM_VIDAL_SASSOON
+                        # 1614 - ??? AVATAR_HAIR_SHORT_BEATLES
+                        # 1615 - ??? AVATAR_HAIR_SHORT_CLARK_KENT
+                        # 1616 - ??? AVATAR_HAIR_SHORT_CURLY
+                        # 1617 - ??? AVATAR_HAIR_SHORT_DAVID_LYNC
+                        # 1618 - ??? AVATAR_HAIR_SHORT_GRANDMA
+                        # 1619 - ??? AVATAR_HAIR_SHORT_GRANDPA
+                        # 1620 - ??? AVATAR_HAIR_SHORT_SPIKE_WAVY
+                        # 1621 - ??? AVATAR_HAIR_SHORT_SURFER          
+                        # 1623 - ??? AVATAR_HAIR_MEDIUM_WAVY
+                        # 1624 - ??? AVATAR_MOUTH_BITE_LIP
+                        # 1625 - ??? AVATAR_MOUTH_CRAP
+                        # 1626 - ??? AVATAR_MOUTH_LOL
+                        # 1627 - ??? AVATAR_MOUTH_OH
+                        # 1628 - ??? AVATAR_MOUTH_SMIRK    
+                        # 1635 - ??? AVATAR_EYES_ASIAN
+                        # 1639 - ??? AVATAR_FACIAL_HAIR_MOUSTACHE_WHISKERS          
+                        # 1640 - ??? AVATAR_MOUTH_MOM
+                        # 1668 - ??? AVATAR_DETAIL_BLUSH
+                        # 1669 - ??? AVATAR_DETAIL_BRUISERIGHT
                         # 1733 - MISSING:DF_NAME_ADVENTURECOWBOY2SHIRT
                         # 1734 - MISSING:DF_NAME_ADVENTURECOWBOY2HAT
                         # 1743 - Dwarf Girl Hat
@@ -460,7 +640,42 @@ class SPPDFilter:
                         # 1764 - Monk Shirt
                         # 1765 - Virgin Mary Hat
                         # 1766 - Virgin Mary Shirt
-                        # 1768-1803 - ???
+                        # 1768 - ??? AVATAR_DETAIL_BEAUTYSPOT
+                        # 1769 - ??? AVATAR_DETAIL_BLOOD
+                        # 1770 - ??? AVATAR_DETAIL_BOWIE
+                        # 1771 - ??? AVATAR_DETAIL_GINGER
+                        # 1772 - ??? AVATAR_DETAIL_VAGINABALLS
+                        # 1773 - ??? AVATAR_EYEBROWS_ANGELINA
+                        # 1774 - ??? AVATAR_EYEBROWS_ANNOYED
+                        # 1775 - ??? AVATAR_EYEBROWS_BUSHY
+                        # 1776 - ??? AVATAR_EYEBROWS_CHISELLED
+                        # 1777 - ??? AVATAR_EYEBROWS_RANDY
+                        # 1778 - ??? AVATAR_EYEBROWS_SLUTTY
+                        # 1779 - ??? AVATAR_EYEBROWS_SYMPATHETIC
+                        # 1780 - ??? AVATAR_EYEBROWS_UNIBROW
+                        # 1781 - ??? AVATAR_EYES_ANGELINA
+                        # 1782 - ??? AVATAR_EYES_BLACK
+                        # 1783 - ??? AVATAR_EYES_BLACKSHADOW
+                        # 1784 - ??? AVATAR_EYES_HENRIETTA
+                        # 1785 - ??? AVATAR_EYES_LASHESTHREE
+                        # 1786 - ??? AVATAR_EYES_LASHESTWO
+                        # 1787 - ??? AVATAR_EYES_PINKSHADOW
+                        # 1788 - ??? AVATAR_EYES_POPE
+                        # 1789 - ??? AVATAR_EYES_SNEEZE
+                        # 1790 - ??? AVATAR_EYES_SQUINTY
+                        # 1791 - ??? AVATAR_EYES_TEARY
+                        # 1792 - ??? AVATAR_HAIR_SHORTAFROPIGTAILS
+                        # 1793 - ??? AVATAR_HAIR_SHORTTREKKIE
+                        # 1794 - ??? AVATAR_MOUTH_ANGELINA
+                        # 1795 - ??? AVATAR_MOUTH_BARF
+                        # 1796 - ??? AVATAR_MOUTH_BURGUNDY
+                        # 1797 - ??? AVATAR_MOUTH_FAT
+                        # 1798 - ??? AVATAR_MOUTH_HENRIETTA
+                        # 1799 - ??? AVATAR_MOUTH_NUTGOBBLER
+                        # 1800 - ??? AVATAR_MOUTH_PURSED
+                        # 1801 - ??? AVATAR_MOUTH_SURPRISED
+                        # 1802 - ??? AVATAR_MOUTH_THIN
+                        # 1803 - ??? AVATAR_MOUTH_UGLY
                         # 1811 - Greek Shirt
                         # 1812 - Greek Hat
                         # 1814 - Thug Hat
@@ -500,8 +715,8 @@ class SPPDFilter:
                         # 1882 - Lab Glasses
                         # 1883 - Waterbear Hat
                         # 1884 - Waterbear Costume
-                        # 1892 - ???
-                        # 1896 - ???
+                        # 1892 - ??? AVATAR_GLASSES_PCNESS
+                        # 1896 - ??? AVATAR__FACIAL_HAIR_PCNESS_GOATEE
                         # 1897 - PC Polo
                         # 1899 - Santa Hat
                         # 1900 - Christmas Jersey
@@ -510,10 +725,10 @@ class SPPDFilter:
                         # 1905 - MISSING:DF_NAME_NEUTRALHOGMANAYKILTSHI
                         # 1906 - Christmas Hat
                         # 1907 - Winter Jersey
-                        # 1912 - ???
+                        # 1912 - ??? AVATAR_DETAIL_POO
                         # 1915 - Reindeer Hat
                         # 1916 - Santa's Stocking Jersey
-                        # 1917 - ???
+                        # 1917 - ??? AVATAR_GLASSES_RUDOLPH
                         # 1919 - Medusa Hat
                         # 1920 - Medusa Shirt
                         # 1921 - Priest Hat
@@ -599,7 +814,8 @@ class SPPDFilter:
                         # 2151 - Bucket Basher Shirt
                         # 2154 - Hot Stuff Hat
                         # 2155 - Hot Stuff Shirt
-                        # 2173-2174 - ???
+                        # 2173 - ??? In category glasses
+                        # 2174 - ??? In category glasses
                         # 2211 - MISSING:DF_NAME_CRATESOAPBOXDEFAULT
                         # 2212 - Golden Box
                         # 2218 - Shirt
@@ -1234,7 +1450,8 @@ class SPPDFilter:
 ##                        mitmproxy.ctx.log.info('list(o) == ' + repr(list(o)))
 ##                        mitmproxy.ctx.log.info("list(o['session']) == " + repr(list(o['session'])))
 ##                        mitmproxy.ctx.log.info("list(o['player_data']) == " + repr(list(o['player_data'])))
-                        mitmproxy.ctx.log.info('o == ' + repr(o))
+##                        mitmproxy.ctx.log.info('o == ' + repr(o))
+                        mitmproxy.ctx.log.info('modified response flow.request.url == ' + repr(flow.request.url))
                         
                 
 
