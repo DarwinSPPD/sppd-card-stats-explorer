@@ -23,7 +23,7 @@ This addon should be active in order to use guest account.
 
 # Setup for custom card levels
 ```
-Usage command for custom card levels: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon_GuestAccount.py
+Usage command for custom card levels: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon_CustomCardLevels.py
 
 This addon rewrites card levels and upgrades, 
 allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
