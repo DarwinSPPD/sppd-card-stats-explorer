@@ -12,9 +12,17 @@ IP address == local IP adress for machine, usually comes in form 192.168.xxx.xxx
 visit internal website mitm.it and follow instructions to install certificate for SSL connection interception
 ```
 
+# Lastest setup
+```
+Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon.py
+
+This addon allows to upgrade every card to level 7 in deckbuilder.
+Open free pack to collect necessary items and navigate to deckbuilder.
+```
+
 # Setup for guest account
 ```
-Usage command for guest account: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon_GuestAccount.py
+Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_GuestAccount.py
 
 This addon tricks SPPD into using guest account,
 if used on fresh SPPD installation. Allows to use SPPD normally.
@@ -23,7 +31,7 @@ This addon should be active in order to use guest account.
 
 # Setup for custom card levels
 ```
-Usage command for custom card levels: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon_CustomCardLevels.py
+Usage command for custom card levels: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_CustomCardLevels.py
 
 This addon rewrites card levels and upgrades, 
 allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
