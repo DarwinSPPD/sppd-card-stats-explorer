@@ -1,6 +1,6 @@
 ## This python script requires mitmproxy library. Install it with following command: Scripts\pip.exe install mitmproxy
 ##
-## Usage command: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon.py
+## Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon.py
 ## mitmdump can also be used instead of mitmweb
 ##
 ## Mitmproxy API documentation is available by using this command: python.exe -m pydoc mitmproxy
@@ -41,7 +41,22 @@ DEF_UPGRADE_LEVEL = ['lvl 1, 1/5']
 ## DEF_CUSTOM_CARDS variable. In order for non playable cards to show up in deck builder, these cards
 ## need to be received from packs first. See free pack logic referenced in code.
 
-DEF_CUSTOM_CARDS = [[]]
+
+
+
+
+##DEF_CUSTOM_CARDS = [[1806, 66, 1690, 1845, 1652, 1659, 141, 1656, 2147, 2216, 1655, 57]]
+
+DEF_CUSTOM_CARDS = [[1806, 66, 1690, 1845, 2183, 1659, 141, 1656, 2147, 2216, 1655, 57]]
+# cards
+                        # 1 - Interrupts reading deck information, freezes free pack animation and the game
+
+                        ## See card info at variables CharacterNames and CharacterNamesNonPlayable
+                        
+                        
+
+
+
 
 ## DEF_CUSTOM_CARDS loads a list of cards into sppd deck
 
@@ -49,34 +64,63 @@ DEF_DAILY_DEAL_LOOT = [{'items': [262, 1]}]
 
 ## DEF_DAILY_DEAL_LOOT places any item of choice in daily deal window
 
-##DEF_CARDS_EXCLUDED = [[1674, 1872, 1666, 1407, 1947, 1869, \
-##                       2258, 2074, 15, 1886, 1684, 1670, \
-##                       1680, 1665, 1682, 1973, 1661, 2030, \
-##                       2081, 1683, 2080, 1672, 1701, 1700, \
-##                       131, 140, 27, 35, 50, 134, \
-##                       92, 200, 2114, 205, 1276, 1288, \
-##                       1808, 186, 28, 8, 45, 12, \
-##                       2044, 2266, 2209, 48, 10, 24, \
-##                       2013, 55, 209, 203, 193, 1949, \
-##                       1824, 40, 133, 52, 1657, 30, \
-##                       1805, 2308, 1813, 46, 2101, 146, \
-##                       1269, 49, 88, 1272, 1311, 2251, \
-##                       1509, 38, 137, 84, 1286, 1273, \
-##                       86, 1923, 2299, 208, 51, 138, \
-##                       31, 1277, 132, 1218, 158, 1307, \
-##                       85, 1983, 2217, 1804, 1504, 1216, \
-##                       201, 44, 1274, 87, 2043, 57, \
-##                       37, 1686, 1806, 144, 91, 61, \
-##                       2042, 141, 29, 1656, 2295, 1972, \
-##                       1506, 179, 89, 206, 47, 54, \
-##                       135, 176, 2035, 2210, 1655, 1472, \
-##                       32, 2200, 2316, 2117, 2130, 2132, \
-##                       2190, 2091, 2202, 2262, 2144, 2195, \
-##                       2290, 2143, 2216, 2098, 2261, 2147]]
+DEF_CARDS_EXCLUDED = [[1674, 1872, 1666, 1407, 1947, 1869, \
+                       2258, 2074, 15, 1886, 1684, 1670, \
+                       1680, 1665, 1682, 1973, 1661, 2030, \
+                       2081, 1683, 2080, 1672, 1701, 1700, \
+                       131, 140, 27, 35, 50, 134, \
+                       92, 200, 2114, 205, 1276, 1288, \
+                       1808, 186, 28, 8, 45, 12, \
+                       2044, 2266, 2209, 48, 10, 24, \
+                       2013, 55, 209, 203, 193, 1949, \
+                       1824, 40, 133, 52, 1657, 30, \
+                       1805, 2308, 1813, 46, 2101, 146, \
+                       1269, 49, 88, 1272, 1311, 2251, \
+                       1509, 38, 137, 84, 1286, 1273, \
+                       86, 1923, 2299, 208, 51, 138, \
+                       31, 1277, 132, 1218, 158, 1307, \
+                       85, 1983, 2217, 1804, 1504, 1216, \
+                       201, 44, 1274, 87, 2043, 57, \
+                       37, 1686, 1806, 144, 91, 61, \
+                       2042, 141, 29, 1656, 2295, 1972, \
+                       1506, 179, 89, 206, 47, 54, \
+                       135, 176, 2035, 2210, 1655, 1472, \
+                       32, 2200, 2316, 2117, 2130, 2132, \
+                       2190, 2091, 2202, 2262, 2144, 2195, \
+                       2290, 2143, 2216, 2098, 2261, 2147, \
+                       2141, 2136, \
+                       \
+                       1441, 182, 1702, 1405, 1406, 184, 2102, 1820, 39, 2093, 1456, \
+                       \
+                       13, 14, 16, 33, 34, 36, \
+                       20, 23, 56, 63, 65, 70, \
+                       59, 66, 67, 68, 69, 71, \
+                       60, 72, 73, 76, 77, 78, \
+                       62, 79, 80, 143, 1278, 1298, \
+                       64, 185, 1319, 1320, 1324, 1331, \
+                       75, 1404, 1423, 1426, 1427, 1428, \
+                       1321, 1434, 1435, 1437, 1439, 1440, \
+                       1442, 1444, 1445, 1446, 1447, 1448, \
+                       1449, 1451, 1453, 1454, 1455, 1470, \
+                       1473, 1474, 1484, 1485, 1512, 1513, \
+                       1514, 1515, 1516, 1517, 1518, 1519, \
+                       1520, 1521, 1522, 1523, 1525, 1526, \
+                       1524, 1527, 1528, 1529, 1530, 1531, \
+                       1532, 1533, 1644, 1645, 1651, 1652, \
+                       1631, 1641, 1647, 1649, 1650, 1653, \
+                       1658, 1659, 1664, 1667, 1685, 1688, \
+                       1689, 1690, 1691, 1693, 1694, 1695, \
+                       1692, 1696, 1698, 1719, 1720, 1727, \
+                       1703, 1704, 1705, 1708, 1715, 1716, \
+                       1717, 1718, 1723, 1724, 1725, 1726, \
+                       1728, 1735, 1736, 1738, 1841, 1845, \
+                       1737, 1843, 1870, 2169, 2170, 2171, \
+                       1740, 2041, 2172, 2176, 2177, 2181, \
+                       1948, 2182, 2183, 2185]]
 
-DEF_CARDS_EXCLUDED = [[]]
+##DEF_CARDS_EXCLUDED = [[]]
 
-## DEF_CARDS_EXCLUDED sets card level to 7 and removes upgrade items for these cards
+## DEF_CARDS_EXCLUDED sets card level to 7 (only for playable characters) and removes upgrade items for these cards
 
 upgradedict = {\
         'lvl 1, 1/5': {'s': 0, 'c': 0, 'x': 0, 'w': 1.0},\
@@ -379,6 +423,168 @@ CharacterNames = {\
         2080: (b'Satan', DEF_Constants['neutral legendary']), \
         1672: (b'ManBearPig', DEF_Constants['neutral legendary'])}
 
+CharacterNamesNonPlayable = {\
+        13: (b'Mimsy', DEF_Constants['adventure common']), \
+        14: (b'Stan of Many Moons', DEF_Constants['adventure common']), \
+        16: (b'Sheriff Cartman', DEF_Constants['adventure common']), \
+        33: (b'Indian Hunter', DEF_Constants['adventure common']), \
+        34: (b'Indian Brave', DEF_Constants['adventure common']), \
+        36: (b'Bounty Hunter Kyle', DEF_Constants['sci-fi common']), \
+        20: (b'Sheriff Cartman', DEF_Constants['adventure rare']), \
+        23: (b'Stan of Many Moons', DEF_Constants['adventure common']), \
+        56: (b'Pocahontas Randy', DEF_Constants['adventure epic']), \
+        63: (b'Stan of Many Moons', DEF_Constants['adventure common']), \
+        65: (b'Poseidon Stan', DEF_Constants['mystical common']), \
+        70: (b'Deckhand Butters', DEF_Constants['adventure common']), \
+        59: (b'(Not playable)', DEF_Constants['neutral common']), \
+        66: (b'(Dark Mage Craig)', DEF_Constants['fantasy rare']), \
+        67: (b'Paladin Butters', DEF_Constants['fantasy common']), \
+        68: (b'Rogue Token', DEF_Constants['fantasy epic']), \
+        69: (b'MISSING:DF_NAME_KENNYGEN', DEF_Constants['fantasy common']), \
+        71: (b'Stan the Great', DEF_Constants['fantasy common']), \
+        60: (b'Sheriff Cartman', DEF_Constants['adventure rare']), \
+        72: (b'MISSING:DF_NAME_TWEEKGEN', DEF_Constants['adventure common']), \
+        73: (b'Program Stan', DEF_Constants['sci-fi epic']), \
+        76: (b'Astronaut Butters', DEF_Constants['sci-fi common']), \
+        77: (b'Nathan', DEF_Constants['adventure rare']), \
+        78: (b'Mimsy', DEF_Constants['adventure common']), \
+        62: (b'(Not playable)', DEF_Constants['neutral common']), \
+        79: (b'Pocahontas Randy', DEF_Constants['neutral common']), \
+        80: (b'Medicine Woman Sharon', DEF_Constants['adventure common']), \
+        143: (b'Imp Tweek', DEF_Constants['mystical common']), \
+        1278: (b'MISSING:DF_NAME_SPELLDARKRESURRECT', DEF_Constants['mystical rare without upgrades']), \
+        1298: (b'Arrow Tower', DEF_Constants['adventure rare']), \
+        64: (b'(Not playable)', DEF_Constants['neutral common']), \
+        185: (b'Gizmo Ike', DEF_Constants['sci-fi common']), \
+        1319: (b'Inuit Kenny', DEF_Constants['adventure legendary']), \
+        1320: (b'Gunslinger Kyle', DEF_Constants['adventure common']), \
+        1324: (b'Medicine Woman Sharon', DEF_Constants['adventure rare']), \
+        1331: (b'Indian Brute', DEF_Constants['adventure common']), \
+        75: (b'Grand Wizard Cartman', DEF_Constants['fantasy legendary']), \
+        1404: (b'A Rat', DEF_Constants['neutral common']), \
+        1423: (b'Cyborg Kenny', DEF_Constants['sci-fi common']), \
+        1426: (b'Space Grunt', DEF_Constants['sci-fi common']), \
+        1427: (b'Space Gunner', DEF_Constants['sci-fi common']), \
+        1428: (b'Cyborg Titan', DEF_Constants['sci-fi common']), \
+        1321: (b'Sheriff Cartman', DEF_Constants['adventure rare']), \
+        1434: (b'Gizmo Ike', DEF_Constants['sci-fi common']), \
+        1435: (b'Cyborg Kenny', DEF_Constants['sci-fi common']), \
+        1437: (b'Enforcer Jimmy', DEF_Constants['sci-fi common']), \
+        1439: (b'Ice Sniper Wendy', DEF_Constants['sci-fi rare']), \
+        1440: (b'Mecha Timmy', DEF_Constants['sci-fi legendary']), \
+        1442: (b'Alien Clyde', DEF_Constants['sci-fi common']), \
+        1444: (b'Gizmo Ike', DEF_Constants['sci-fi epic']), \
+        1445: (b'MISSING:DF_NAME_SPELLRATATTACKFAN (Not playable)', DEF_Constants['neutral common']), \
+        1446: (b'A Rat', DEF_Constants['neutral common']), \
+        1447: (b'A Rat', DEF_Constants['neutral common']), \
+        1448: (b'A Rat', DEF_Constants['neutral common']), \
+        1449: (b'Cyborg Kenny', DEF_Constants['sci-fi common']), \
+        1451: (b'Enforcer Jimmy', DEF_Constants['sci-fi rare']), \
+        1453: (b'Program Stan', DEF_Constants['sci-fi epic']), \
+        1454: (b'Powerfist Dougie', DEF_Constants['sci-fi rare']), \
+        1455: (b'Ice Sniper Wendy', DEF_Constants['sci-fi rare']), \
+        1470: (b'Arrow Tower', DEF_Constants['adventure common']), \
+        1473: (b'Storyteller Jimmy', DEF_Constants['adventure epic']), \
+        1474: (b'Captain Wendy', DEF_Constants['adventure rare']), \
+        1484: (b'Barrel Dougie', DEF_Constants['adventure rare']), \
+        1485: (b'Hookhand Clyde', DEF_Constants['adventure epic']), \
+        1512: (b'Choirboy Butters', DEF_Constants['mystical epic']), \
+        1513: (b'Scout Ike', DEF_Constants['mystical common']), \
+        1514: (b'Hermes Kenny', DEF_Constants['mystical epic']), \
+        1515: (b'Angel Wendy', DEF_Constants['mystical common']), \
+        1516: (b'Friar Jimmy', DEF_Constants['mystical common']), \
+        1517: (b'Witch Doctor Token', DEF_Constants['mystical legendary']), \
+        1518: (b'The Master Ninjew', DEF_Constants['mystical legendary']), \
+        1519: (b'Sexy Nun Randy', DEF_Constants['mystical epic']), \
+        1520: (b'Pope Timmy', DEF_Constants['mystical epic']), \
+        1521: (b'Robin Tweek', DEF_Constants['fantasy common']), \
+        1522: (b'Canadian Knight Ike', DEF_Constants['fantasy common']), \
+        1523: (b'Kyle of the Drow Elves', DEF_Constants['fantasy rare']), \
+        1525: (b'The Amazingly Randy', DEF_Constants['fantasy epic']), \
+        1526: (b'Stan the Great', DEF_Constants['fantasy common']), \
+        1524: (b'Catapult Timmy', DEF_Constants['fantasy rare']), \
+        1527: (b'Dwarf King Clyde', DEF_Constants['fantasy rare']), \
+        1528: (b'Dark Mage Craig', DEF_Constants['fantasy rare']), \
+        1529: (b'Le Bard Jimmy', DEF_Constants['fantasy common']), \
+        1530: (b'Rogue Token', DEF_Constants['fantasy common']), \
+        1531: (b'Grand Wizard Cartman', DEF_Constants['fantasy legendary']), \
+        1532: (b'Princess Kenny', DEF_Constants['fantasy common']), \
+        1533: (b'Zionist Ranger', DEF_Constants['mystical common']), \
+        1644: (b'Little Choirboy', DEF_Constants['mystical common']), \
+        1645: (b'Mormon Missionary', DEF_Constants['mystical common']), \
+        1651: (b'Royal Archer', DEF_Constants['neutral common']), \
+        1652: (b'Tank Kid', DEF_Constants['neutral common']), \
+        1631: (b'Pirate Ship Timmy', DEF_Constants['adventure rare']), \
+        1641: (b'Space Assasin', DEF_Constants['sci-fi common']), \
+        1647: (b'Subzero Titan', DEF_Constants['sci-fi common']), \
+        1649: (b'Royal Archer', DEF_Constants['adventure common']), \
+        1650: (b'Turbo Space Grunt', DEF_Constants['sci-fi common']), \
+        1653: (b'Indian Warrior', DEF_Constants['adventure common']), \
+        1658: (b'Beast Mode', DEF_Constants['fantasy legendary without upgrades']), \
+        1659: (b'Invincibility', DEF_Constants['fantasy legendary without upgrades']), \
+        1664: (b'MISSING:MR GNOME', DEF_Constants['neutral common']), \
+        1667: (b'MISSING:GROSS PIDGEON', DEF_Constants['neutral common']), \
+        1685: (b'Pidgeons', DEF_Constants['neutral common']), \
+        1688: (b'Healing Fountain', DEF_Constants['mystical common']), \
+        1689: (b'Toxic Pylon', DEF_Constants['sci-fi common']), \
+        1690: (b'Rune Totem', DEF_Constants['fantasy common']), \
+        1691: (b'Cyborg Tower', DEF_Constants['sci-fi rare']), \
+        1693: (b'Alien Queen Red', DEF_Constants['sci-fi rare']), \
+        1694: (b'Space Warrior Token', DEF_Constants['sci-fi rare']), \
+        1695: (b'Sixth Element Randy', DEF_Constants['sci-fi legendary']), \
+        1692: (b'Shaman Token', DEF_Constants['adventure common']), \
+        1696: (b'Marine Craig', DEF_Constants['sci-fi common']), \
+        1698: (b'Bounty Hunter Kyle', DEF_Constants['sci-fi common']), \
+        1719: (b'Arrowstorm Caster', DEF_Constants['neutral common']), \
+        1720: (b'Lightning Bolt Caster', DEF_Constants['neutral common']), \
+        1727: (b'Indian Brute', DEF_Constants['adventure common']), \
+        1703: (b'Incan Craig', DEF_Constants['mystical common']), \
+        1704: (b'Imp Tweek', DEF_Constants['mystical common']), \
+        1705: (b'Holy Defender', DEF_Constants['mystical rare']), \
+        1708: (b'Prophet Dougie', DEF_Constants['mystical rare']), \
+        1715: (b'Castle Defender', DEF_Constants['fantasy rare']), \
+        1716: (b'Squire', DEF_Constants['fantasy common']), \
+        1717: (b'Native Hunter', DEF_Constants['fantasy common']), \
+        1718: (b'Crusader', DEF_Constants['fantasy common']), \
+        1723: (b'Dwarf Engineer Dougie', DEF_Constants['fantasy rare']), \
+        1724: (b'Youth Pastor Craig', DEF_Constants['mystical common']), \
+        1725: (b'Shieldmaiden Wendy', DEF_Constants['fantasy legendary']), \
+        1726: (b'Stan the Great', DEF_Constants['fantasy common']), \
+        1728: (b'Subzero Titan', DEF_Constants['sci-fi common']), \
+        1735: (b'Mormon Missionary', DEF_Constants['mystical common']), \
+        1736: (b'Witch Doctor Token', DEF_Constants['mystical legendary']), \
+        1738: (b'Imp Tweek', DEF_Constants['mystical common']), \
+        1841: (b'Terrance and Phillip', DEF_Constants['neutral common']), \
+        1845: (b'A Rat', DEF_Constants['neutral common']), \
+        1737: (b'Shieldmaiden Wendy', DEF_Constants['fantasy legendary']), \
+        1843: (b'Underpants Gnomes', DEF_Constants['fantasy rare']), \
+        1870: (b'Terrance and Phillip', DEF_Constants['neutral common']), \
+        2169: (b'Toolshed', DEF_Constants['superheroes common']), \
+        2170: (b'Professor Chaos', DEF_Constants['superheroes common']), \
+        2171: (b'Mosquito', DEF_Constants['superheroes common']), \
+        1740: (b'Smuggler Ike', DEF_Constants['adventure common']), \
+        2041: (b'Ice Sniper Wendy', DEF_Constants['neutral rare']), \
+        2172: (b'Tupperware', DEF_Constants['superheroes common']), \
+        2176: (b'Call Girl', DEF_Constants['superheroes common']), \
+        2177: (b'Mysterion', DEF_Constants['superheroes common']), \
+        2181: (b'Fastpass', DEF_Constants['superheroes common']), \
+        1948: (b'Visitors', DEF_Constants['sci-fi rare']), \
+        2182: (b'Human Kite', DEF_Constants['superheroes common']), \
+        2183: (b'Tupperware', DEF_Constants['superheroes common']), \
+        2185: (b'The Coon', DEF_Constants['superheroes common']), \
+        \
+        1441: (b'Indian Brave', DEF_Constants['adventure epic']), \
+        182: (b'Gizmo Ike', DEF_Constants['sci-fi epic']), \
+        184: (b'Gizmo Ike', DEF_Constants['sci-fi epic']), \
+        1702: (b'Auto-Vacuum', DEF_Constants['sci-fi legendary']), \
+        2102: (b'Auto-Vacuum', DEF_Constants['sci-fi legendary']), \
+        1820: (b'Snake', DEF_Constants['mystical legendary']), \
+        39: (b'Little Choirboy', DEF_Constants['mystical epic']), \
+        1406: (b'A Rat', DEF_Constants['neutral common']), \
+        1405: (b'A Rat', DEF_Constants['neutral common']), \
+        1456: (b'A Cock', DEF_Constants['neutral epic']), \
+        2093: (b'Mosquito Swarm', DEF_Constants['superheroes rare'])}
+
 class SPPDFilter:
 
 
@@ -393,6 +599,11 @@ class SPPDFilter:
                 
 ##                mitmproxy.ctx.log.info('flow.reply == ' + repr(flow.reply))
                 while True:
+##                        if len(flow.request.content):
+##                                mitmproxy.ctx.log.info('flow.request.url == ' + repr(flow.request.url) + \
+##                                                       ', len(flow.request.content) == ' + repr(len(flow.request.content)) + \
+##                                                       ' -> ' + repr(flow.request.content))
+                        # flow.request.content returns post content in bytes
                         if flow.request.url == 'https://android.googleapis.com/auth':
                                 break
 ##                        if flow.request.url.startswith('https://app-measurement.com/'):
@@ -508,9 +719,20 @@ class SPPDFilter:
                                                                                                   }}))
                                         mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
                                         break
-
+                                if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/battle/start':
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({"battle": {"checksum": \
+                                                                                                                "67034ed91eac55df78f352d9035cec11ad0386ba9ce6ab2fa8fe3f12ae6ae0e6",\
+                                                                                                                "data": [9869608],"time": int(time.time())}}))
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url) + ', flow.request.content == '+repr(flow.request.content))
+                                        break
+                                if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/battle/finish':
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({}))
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url) + ', flow.request.content == '+repr(flow.request.content))
+                                        break
 # Free pack logic here
-
+                                
                                 if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/cardpack/cardpacks/free':
                                         debug_time_start = time.time()
 ##                                        cards_field_i = 2
@@ -565,167 +787,24 @@ class SPPDFilter:
                                                 cards_field.append({"id": DEF_CUSTOM_CARDS[0][i],"quantity": 1})
                                                 i += 1
                                         gear_field = []
-##                                        gear_field_i = 153
-##                                        while gear_field_i <= 153:
-##                                                gear_field.append({"id": gear_field_i})
-##                                                gear_field_i += 1
-##                                        items_field_i = 2401
-                                        items_field = []
-##                                        while items_field_i <= 2500:
-##                                                items_field.append(items_field_i)
-##                                                items_field.append(1)
-####                                                items_field_i += 1
-                                        ## coins
-##                                        items_field.append(213)
-##                                        items_field.append(50075)
-                                        ## all adventure mats for 6/5/4/3
-##                                        items_field.append(219)
-##                                        items_field.append(18307)
-##                                        items_field.append(220)
-##                                        items_field.append(9976)
-##                                        items_field.append(221)
-##                                        items_field.append(3381)
-                                        ## max out adventure theme legendary
-##                                        items_field.append(219)
-##                                        items_field.append(2365)
-##                                        items_field.append(220)
-##                                        items_field.append(1328)
-##                                        items_field.append(221)
-##                                        items_field.append(524)
-                                        ## max out mystical theme legendary
-##                                        items_field.append(223)
-##                                        items_field.append(2365)
-##                                        items_field.append(224)
-##                                        items_field.append(1328)
-##                                        items_field.append(225)
-##                                        items_field.append(524)
-                                        ## max out adventure theme epic
-##                                        items_field.append(219)
-##                                        items_field.append(1870)
-##                                        items_field.append(220)
-##                                        items_field.append(1025)
-##                                        items_field.append(221)
-##                                        items_field.append(362)
-                                        ## max out superheroes theme rare
-##                                        items_field.append(235)
-##                                        items_field.append(1297)
-##                                        items_field.append(236)
-##                                        items_field.append(782)
-##                                        items_field.append(237)
-##                                        items_field.append(259)
-                                        ## max out adventure theme rare
-##                                        items_field.append(219)
-##                                        items_field.append(1297)
-##                                        items_field.append(220)
-##                                        items_field.append(782)
-##                                        items_field.append(221)
-##                                        items_field.append(259)
-                                        ## max out adventure theme common
-##                                        items_field.append(219)
-##                                        items_field.append(940)
-##                                        items_field.append(220)
-##                                        items_field.append(455)
-##                                        items_field.append(221)
-##                                        items_field.append(150)
-                                        ## max out fantasy theme common
-##                                        items_field.append(231)
-##                                        items_field.append(940)
-##                                        items_field.append(232)
-##                                        items_field.append(455)
-##                                        items_field.append(233)
-##                                        items_field.append(150)
+##                                        gear_field_list = [153, 155, 180, 181, 194, 195, 196, 198, 204, 1256, 1267, 1268, 1283, 1285, 1290, 1291, 1293, 1294, \
+##                                                           1302, 1303, 1336, 1337, 1341, 1556, 1733, 1734, 1743, 1744, 1746, 1747, 1749, 1750, 1752, 1753, \
+##                                                           1755, 1756, 1757, 1758, 1764, 1765, 1766, 1811, 1812, 1814, 1815, 1816, 1817, 1818, 1827, 1828, \
+##                                                           1830, 1831, 1835, 1848, 1849, 1850, 1851, 1853, 1854, 1855, 1856, 1857, 1858, 1859, 1860, 1861, \
+##                                                           1862, 1863, 1864, 1865, 1866, 1867, 1876, 1877, 1878, 1879, 1880, 1882, 1883, 1884, 1897, 1899, \
+##                                                           1900, 1902, 1903, 1905, 1906, 1907, 1915, 1916, 1919, 1920, 1921, 1922, 1930, 1931, 1932, 1934, \
+##                                                           1936, 1937, 1938, 1939, 1944, 1945, 1951, 1952, 1954, 1955, 1961, 1967, 1968, 1969, 1970, 1976, \
+##                                                           1979, 1980, 1985, 1986, 1987, 1988, 2009, 2010, 2011, 2012, 2021, 2022, 2027, 2031, 2032, 2038, \
+##                                                           2039, 2046, 2047, 2048, 2049, 2050, 2051, 2055, 2057, 2059, 2060, 2061, 2062, 2063, 2064, 2067, \
+##                                                           2070, 2072, 2073, 2075, 2076, 2077, 2082, 2083, 2084, 2085, 2086, 2087, 2088, 2089, 2090, 2094, \
+##                                                           2100, 2103, 2104, 2105, 2106, 2107, 2108, 2138, 2139, 2150, 2151, 2154, 2155, 2211, 2212, 2218, \
+##                                                           2219, 2226, 2227, 2228, 2229, 2231, 2232, 2233, 2235, 2236, 2239, 2240, 2241, 2243, 2244, 2246, \
+##                                                           2247, 2250, 2253, 2255, 2256, 2259, 2260, 2273, 2280, 2288, 2289, 2292, 2293, 2294, 2303, 2304, \
+##                                                           2306, 2314, 2315, 2320, 2321]
+                                        gear_field_list = [2047, 2048]
 
 
 
-                                        items_field_cache = {}
-                                        CharacterIdList = list(CharacterNames)
-                                        i = 0
-                                        while i < len(CharacterIdList):
-                                                if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
-                                                        pass
-                                                else:
-                                                        tempName_unused, tempCardData = CharacterNames[CharacterIdList[i]]
-                                                        tempCardCount, tempItemList = tempCardData
-                                                        cards_field.append({"id": CharacterIdList[i], "quantity": tempCardCount})
-                                                        j = 0
-                                                        while j < len(tempItemList):
-                                                                tempItemId, tempItemCount = tempItemList[j]
-                                                                if tempItemId in items_field_cache:
-                                                                        items_field_cache[tempItemId] += tempItemCount
-                                                                else:
-                                                                        items_field_cache[tempItemId] = tempItemCount
-                                                                j += 1
-                                                i += 1
-                                        items_field_cache_list = list(items_field_cache)
-                                        i = 0
-                                        while i < len(items_field_cache_list):
-                                                items_field.append(items_field_cache_list[i])
-                                                items_field.append(items_field_cache[items_field_cache_list[i]])
-                                                i += 1
-                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
-                                                                                         json.dumps({"contents": {"balance": [],\
-                                                                                                                  "cards": cards_field,\
-                                                                                                                  "gear": gear_field,\
-                                                                                                                  "items": items_field},\
-                                                                                                     "next_timestamp": int(time.time())}).encode())
-                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
-##                                        mitmproxy.ctx.log.info('custom response took ' + str((time.time() - debug_time_start)) + ' seconds')
-                                        break
-                                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/techtree/cards/') and \
-                                   (flow.request.url.endswith('/evolve') or flow.request.url.endswith('/upgrade')):
-                                        
-                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
-                                                                                         json.dumps({}).encode())
-                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
-                                        break
-                                
-                        # other objects that does not appear anywhere
-                        # 251 - XP ?
-                        # 1346-1349 - ???
-
-
-
-                        # items (overlaps with gear id list)
-
-                        # 213 - Coins
-                        # 214 - Cash
-                        # 215 - Ancient Fossil
-                        # 216 - Power Serum
-                        # 217 - Tome of Knowledge
-                        # 218 - MISSING:DF_CARD_ITEM_GEN_3
-                        # 219 - Indian Feather
-                        # 220 - Arrowhead
-                        # 221 - Sheriff's Star
-                        # 222 - MISSING:DF_CARD_ITEM_ADV_3
-                        # 223 - Holy Candle
-                        # 224 - Prayer Beads
-                        # 225 - Fancy Dreidel
-                        # 226 - MISSING:DF_CARD_ITEM_MYS_3
-                        # 227 - Top Secret Chip
-                        # 228 - Alien Hand
-                        # 229 - Futuristic Robot
-                        # 230 - MISSING:DF_CARD_ITEM_SCI_3
-                        # 231 - Ancient Key
-                        # 232 - Mage's Tome
-                        # 233 - Ring of Power
-                        # 234 - MISSING:DF_CARD_ITEM_FAN_3
-                        # 235 - Toxic Waste
-                        # 236 - Energy Drink
-                        # 237 - Comics
-                        # 238 - MISSING:DF_CARD_ITEM_SUP_3
-                        # 239-250 - ??? game crashes on pack opening, daily deal window shows nothing
-                        # 253 - PvP Tickets
-                        # 259 - MISSING:COINSLVL1CARD
-                        # 260 - Bottle Caps
-                        # 261 - Battle Tokens
-                        # 262 - Eternity Gems
-                        # 263 - Phones Destroyed:
-
-                        # gear
-
-                        # gear marked with ??? are cosmetics that can be only accessed at avatar section and crashes elsewhere.
-
-                        
                         # 153 - MISSING:DF_NAME_NAKEDSHIRT
                         # 155 - Cowboy Hat
                         # 180 - Knight Outfit
@@ -1072,318 +1151,198 @@ class SPPDFilter:
                         # 2320 - Chaos Minion #42 Hat
                         # 2321 - Chaos Minion #42 Shirt
                         
+##                                        gear_field_list
+                                        gear_field_i = 0
+                                        while gear_field_i < len(gear_field_list):
+                                                gear_field.append({"id": gear_field_list[gear_field_i]})
+                                                gear_field_i += 1
+
+                                        
+##                                        items_field_i = 2401
+                                        items_field = []
+##                                        while items_field_i <= 2500:
+##                                                items_field.append(items_field_i)
+##                                                items_field.append(1)
+####                                                items_field_i += 1
+                                        ## coins
+##                                        items_field.append(213)
+##                                        items_field.append(50075)
+                                        ## all adventure mats for 6/5/4/3
+##                                        items_field.append(219)
+##                                        items_field.append(18307)
+##                                        items_field.append(220)
+##                                        items_field.append(9976)
+##                                        items_field.append(221)
+##                                        items_field.append(3381)
+                                        ## max out adventure theme legendary
+##                                        items_field.append(219)
+##                                        items_field.append(2365)
+##                                        items_field.append(220)
+##                                        items_field.append(1328)
+##                                        items_field.append(221)
+##                                        items_field.append(524)
+                                        ## max out mystical theme legendary
+##                                        items_field.append(223)
+##                                        items_field.append(2365)
+##                                        items_field.append(224)
+##                                        items_field.append(1328)
+##                                        items_field.append(225)
+##                                        items_field.append(524)
+                                        ## max out adventure theme epic
+##                                        items_field.append(219)
+##                                        items_field.append(1870)
+##                                        items_field.append(220)
+##                                        items_field.append(1025)
+##                                        items_field.append(221)
+##                                        items_field.append(362)
+                                        ## max out superheroes theme rare
+##                                        items_field.append(235)
+##                                        items_field.append(1297)
+##                                        items_field.append(236)
+##                                        items_field.append(782)
+##                                        items_field.append(237)
+##                                        items_field.append(259)
+                                        ## max out adventure theme rare
+##                                        items_field.append(219)
+##                                        items_field.append(1297)
+##                                        items_field.append(220)
+##                                        items_field.append(782)
+##                                        items_field.append(221)
+##                                        items_field.append(259)
+                                        ## max out adventure theme common
+##                                        items_field.append(219)
+##                                        items_field.append(940)
+##                                        items_field.append(220)
+##                                        items_field.append(455)
+##                                        items_field.append(221)
+##                                        items_field.append(150)
+                                        ## max out fantasy theme common
+##                                        items_field.append(231)
+##                                        items_field.append(940)
+##                                        items_field.append(232)
+##                                        items_field.append(455)
+##                                        items_field.append(233)
+##                                        items_field.append(150)
+
+
+
+                                        items_field_cache = {}
+                                        
+                                        CharacterIdList = list(CharacterNames)
+                                        i = 0
+                                        while i < len(CharacterIdList):
+                                                if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
+                                                        pass
+                                                else:
+                                                        tempName_unused, tempCardData = CharacterNames[CharacterIdList[i]]
+                                                        tempCardCount, tempItemList = tempCardData
+                                                        cards_field.append({"id": CharacterIdList[i], "quantity": tempCardCount})
+                                                        j = 0
+                                                        while j < len(tempItemList):
+                                                                tempItemId, tempItemCount = tempItemList[j]
+                                                                if tempItemId in items_field_cache:
+                                                                        items_field_cache[tempItemId] += tempItemCount
+                                                                else:
+                                                                        items_field_cache[tempItemId] = tempItemCount
+                                                                j += 1
+                                                i += 1
+                                        
+                                        CharacterIdList = list(CharacterNamesNonPlayable)
+                                        i = 0
+                                        while i < len(CharacterIdList):
+                                                if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
+                                                        pass
+                                                elif CharacterIdList[i] not in DEF_CUSTOM_CARDS[0]:
+                                                        pass
+                                                else:
+                                                        tempName_unused, tempCardData = CharacterNamesNonPlayable[CharacterIdList[i]]
+                                                        tempCardCount, tempItemList = tempCardData
+                                                        cards_field.append({"id": CharacterIdList[i], "quantity": tempCardCount})
+                                                        j = 0
+                                                        while j < len(tempItemList):
+                                                                tempItemId, tempItemCount = tempItemList[j]
+                                                                if tempItemId in items_field_cache:
+                                                                        items_field_cache[tempItemId] += tempItemCount
+                                                                else:
+                                                                        items_field_cache[tempItemId] = tempItemCount
+                                                                j += 1
+                                                i += 1
+                                                
+                                        items_field_cache_list = list(items_field_cache)
+                                        i = 0
+                                        while i < len(items_field_cache_list):
+                                                items_field.append(items_field_cache_list[i])
+                                                items_field.append(items_field_cache[items_field_cache_list[i]])
+                                                i += 1
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({"contents": {"balance": [],\
+                                                                                                                  "cards": cards_field,\
+                                                                                                                  "gear": gear_field,\
+                                                                                                                  "items": items_field},\
+                                                                                                     "next_timestamp": int(time.time()-(24*60*60))}).encode())
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
+##                                        mitmproxy.ctx.log.info('custom response took ' + str((time.time() - debug_time_start)) + ' seconds')
+                                        break
+                                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/techtree/cards/') and \
+                                   (flow.request.url.endswith('/evolve') or flow.request.url.endswith('/upgrade')):
+                                        
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps({}).encode())
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
+                                        break
+                                
+                        # other objects that does not appear anywhere else
+                        # 251 - XP ?
+
+
+
+                        # items (overlaps with gear id list)
+
+                        # 213 - Coins
+                        # 214 - Cash
+                        # 215 - Ancient Fossil
+                        # 216 - Power Serum
+                        # 217 - Tome of Knowledge
+                        # 218 - MISSING:DF_CARD_ITEM_GEN_3
+                        # 219 - Indian Feather
+                        # 220 - Arrowhead
+                        # 221 - Sheriff's Star
+                        # 222 - MISSING:DF_CARD_ITEM_ADV_3
+                        # 223 - Holy Candle
+                        # 224 - Prayer Beads
+                        # 225 - Fancy Dreidel
+                        # 226 - MISSING:DF_CARD_ITEM_MYS_3
+                        # 227 - Top Secret Chip
+                        # 228 - Alien Hand
+                        # 229 - Futuristic Robot
+                        # 230 - MISSING:DF_CARD_ITEM_SCI_3
+                        # 231 - Ancient Key
+                        # 232 - Mage's Tome
+                        # 233 - Ring of Power
+                        # 234 - MISSING:DF_CARD_ITEM_FAN_3
+                        # 235 - Toxic Waste
+                        # 236 - Energy Drink
+                        # 237 - Comics
+                        # 238 - MISSING:DF_CARD_ITEM_SUP_3
+                        # 239-250 - ??? game crashes on pack opening, daily deal window shows nothing
+                        # 253 - PvP Tickets
+                        # 259 - MISSING:COINSLVL1CARD
+                        # 260 - Bottle Caps
+                        # 261 - Battle Tokens
+                        # 262 - Eternity Gems
+                        # 263 - Phones Destroyed:
+
+                        # gear
+
+                        # gear marked with ??? are cosmetics that can be only accessed at avatar section and crashes elsewhere.
+
                         
                         
                         
                         
                         
-                        # cards
-                        # 1 - Interrupts reading deck information, freezes free pack animation and the game
-                        #8: b'Medicine Woman Sharon', \
-                        #10: b'Pocahontas Randy', \
-                        #12: b'Stan of Many Moons', \
-                        # 13 - Mimsy
-                        # 14 - Stan of Many Moons
-                        #15: b'Nathan', \
-                        # 16 - Sheriff Cartman
-                        # 20 - Sheriff Cartman
-                        # 23 - Stan of Many Moons
-                        #24: b'Fireball', \
-                        #27: b'Deckhand Butters', \
-                        #28: b'Outlaw Tweek', \
-                        #29: b'Stan the Great', \
-                        #30: b'Program Stan', \
-                        #31: b'Poseidon Stan', \
-                        #32: b'Grand Wizard Cartman', \
-                        # 33 - Indian Hunter
-                        # 34 - Indian Brave
-                        #35: b'Gunslinger Kyle', \
-                        # 36 - Bounty Hunter Kyle
-                        #37: b'Princess Kenny', \
-                        #38: b'A.W.E.S.O.M.-O 4000', \
-                        # 39 - Little Choirboy
-                        #40: b'Freeze Ray', \
-                        #44: b'Sexy Nun Randy', \
-                        #45: b'Sheriff Cartman', \
-                        #46: b'Warboy Tweek', \
-                        #47: b'Robin Tweek', \
-                        #48: b'Incan Craig', \
-                        #49: b'Marine Craig', \
-                        #50: b'Hookhand Clyde', \
-                        #51: b'Hercules Clyde', \
-                        #52: b'Ice Sniper Wendy', \
-                        #54: b'Rogue Token', \
-                        #55: b'Astronaut Butters', \
-                        # 56 - Pocahontas Randy
-                        #57: b'Paladin Butters', \
-                        # 59 - ??? (Tank, Neutral, Common)
-                        # 60 - Sheriff Cartman
-                        #61: b'Dark Mage Craig', \
-                        # 62 - ??? (Tank, Neutral, Common)
-                        # 63 - Stan of Many Moons
-                        # 64 - ??? (Tank, Neutral, Common)
-                        # 65 - Poseidon Stan
-                        # 66 - ??? (Ranged, Fantasy, Rare)
-                        # 67 - Paladin Butters
-                        # 68 - Rogue Token
-                        # 69 - MISSING:DF_NAME_KENNYGEN
-                        # 70 - Deckhand Butters
-                        # 71 - Stan the Great
-                        # 72 - MISSING:DF_NAME_TWEEKGEN
-                        # 73 - Program Stan
-                        # 75 - Grand Wizard Cartman
-                        # 76 - Astronaut Butters
-                        # 77 - Nathan
-                        # 78 - Mimsy
-                        # 79 - Pocahontas Randy
-                        # 80 - Medicine Woman Sharon
-                        #84: b'Choirboy Butters', \
-                        #85: b'Hallelujah', \
-                        #86: b'Angel Wendy', \
-                        #87: b'Pope Timmy', \
-                        #88: b'Mecha Timmy', \
-                        #89: b'Kyle of the Drow Elves', \
-                        #91: b'Catapult Timmy', \
-                        #92: b'Pirate Ship Timmy', \
-                        #131: b'Smuggler Ike', \
-                        #132: b'Scout Ike', \
-                        #133: b'Gizmo Ike', \
-                        #134: b'Inuit Kenny', \
-                        #135: b'The Amazingly Randy', \
-                        #137: b'Sixth Element Randy', \
-                        #138: b'Hermes Kenny', \
-                        #140: b'Captain Wendy', \
-                        #141: b'Shieldmaiden Wendy', \
-                        # 143 - Imp Tweek
-                        #144: b'Canadian Knight Ike', \
-                        #146: b'Cyborg Kenny', \
-                        #158: b'Zen Cartman', \
-                        #176: b'Witch Garrison', \
-                        #179: b'Dwarf King Clyde', \
-                        # 182 - Gizmo Ike
-                        # 184 - Gizmo Ike
-                        # 185 - Gizmo Ike
-                        #186: b'Lightning Bolt', \
-                        #193: b'Alien Clyde', \
-                        #200: b'Shaman Token', \
-                        #201: b'Witch Doctor Token', \
-                        #203: b'Space Warrior Token', \
-                        #205: b'Storyteller Jimmy', \
-                        #206: b'Le Bard Jimmy', \
-                        #208: b'Friar Jimmy', \
-                        #209: b'Enforcer Jimmy', \
-                        #1216: b'The Master Ninjew', \
-                        #1218: b'Youth Pastor Craig', \
-                        #1269: b'Hyperdrive', \
-                        #1272: b'Mind Control', \
-                        #1273: b'Purify', \
-                        #1274: b'Unholy Combustion', \
-                        #1276: b'Arrowstorm', \
-                        #1277: b'Regeneration', \
-                        # 1278 - MISSING:DF_NAME_SPELLDARKRESURRECT
-                        #1286: b'Power Bind', \
-                        #1288: b'Barrel Dougie', \
-                        # 1298 - Arrow Tower
-                        #1307: b'Energy Staff', \
-                        #1311: b'Powerfist Dougie', \
-                        # 1319 - Inuit Kenny
-                        # 1320 - Gunslinger Kyle
-                        # 1321 - Sheriff Cartman
-                        # 1324 - Medicine Woman Sharon
-                        # 1331 - Indian Brute
-                        # 1404 - A Rat
-                        # 1405 - A Rat
-                        # 1406 - A Rat
-                        #1407: b'Rat Swarm', \
-                        # 1423 - Cyborg Kenny
-                        # 1426 - Space Grunt
-                        # 1427 - Space Gunner
-                        # 1428 - Cyborg Titan
-                        # 1434 - Gizmo Ike
-                        # 1435 - Cyborg Kenny
-                        # 1437 - Enforcer Jimmy
-                        # 1439 - Ice Sniper Wendy
-                        # 1440 - Mecha Timmy
-                        # 1441 - Indian Brave
-                        # 1442 - Alien Clyde
-                        # 1444 - Gizmo Ike
-                        # 1445 - MISSING:DF_NAME_SPELLRATATTACKFAN
-                        # 1446 - A Rat
-                        # 1447 - A Rat
-                        # 1448 - A Rat
-                        # 1449 - Cyborg Kenny
-                        # 1451 - Enforcer Jimmy
-                        # 1453 - Program Stan
-                        # 1454 - Powerfist Dougie
-                        # 1455 - Ice Sniper Wendy
-                        # 1456 - A Cock
-                        # 1470 - Arrow Tower
-                        ##1472: b'Cock Magic', \
-                        # 1473 - Storyteller Jimmy
-                        # 1474 - Captain Wendy
-                        # 1484 - Barrel Dougie
-                        # 1485 - Hookhand Clyde
-                        ##1504: b'Prophet Dougie', \
-                        ##1506: b'Dwarf Engineer Dougie', \
-                        ##1509: b'Alien Queen Red', \
-                        # 1512 - Choirboy Butters
-                        # 1513 - Scout Ike
-                        # 1514 - Hermes Kenny
-                        # 1515 - Angel Wendy
-                        # 1516 - Friar Jimmy
-                        # 1517 - Witch Doctor Token
-                        # 1518 - The Master Ninjew
-                        # 1519 - Sexy Nun Randy
-                        # 1520 - Pope Timmy
-                        # 1521 - Robin Tweek
-                        # 1522 - Canadian Knight Ike
-                        # 1523 - Kyle of the Drow Elves
-                        # 1524 - Catapult Timmy
-                        # 1525 - The Amazingly Randy
-                        # 1526 - Stan the Great
-                        # 1527 - Dwarf King Clyde
-                        # 1528 - Dark Mage Craig
-                        # 1529 - Le Bard Jimmy
-                        # 1530 - Rogue Token
-                        # 1531 - Grand Wizard Cartman
-                        # 1532 - Princess Kenny
-                        # 1533 - Zionist Ranger
-                        # 1631 - Pirate Ship Timmy
-                        # 1641 - Space Assasin
-                        # 1644 - Little Choirboy
-                        # 1645 - Mormon Missionary
-                        # 1647 - Subzero Titan
-                        # 1649 - Royal Archer
-                        # 1650 - Turbo Space Grunt
-                        # 1651 - Royal Archer
-                        # 1652 - Tank Kid
-                        # 1653 - Indian Warrior
-                        ##1655: b'Transmogrify', \
-                        ##1656: b'Chicken Coop', \
-                        ##1657: b'Poison', \
-                        # 1658 - Beast Mode
-                        # 1659 - Invincibility
-                        ##1661: b'Mimsy', \
-                        # 1664 - MISSING:MR GNOME
-                        ##1665: b'Terrance Mephesto', \
-                        ##1666: b'Nelly', \
-                        # 1667 - MISSING:GROSS PIDGEON
-                        ##1670: b'Starvin\' Marvin', \
-                        ##1672: b'ManBearPig'}
-                        ##1674: b'DogPoo', \
-                        ##1680: b'Terrance and Phillip', \
-                        ##1682: b'Big Gay Al', \
-                        ##1683: b'Officer Barbrady', \
-                        ##1684: b'Pigeon Gang', \
-                        # 1685 - Pidgeons
-                        ##1686: b'Underpants Gnomes', \
-                        # 1688 - Healing Fountain
-                        # 1689 - Toxic Pylon
-                        # 1690 - Rune Totem
-                        # 1691 - Cyborg Tower
-                        # 1692 - Shaman Token
-                        # 1693 - Alien Queen Red
-                        # 1694 - Space Warrior Token
-                        # 1695 - Sixth Element Randy
-                        # 1696 - Marine Craig
-                        # 1698 - Bounty Hunter Kyle
-                        ##1700: b'Bandita Sally', \
-                        ##1701: b'Calamity Heidi', \
-                        # 1702 - Auto-Vacuum
-                        # 1703 - Incan Craig
-                        # 1704 - Imp Tweek
-                        # 1705 - Holy Defender
-                        # 1708 - Prophet Dougie
-                        # 1715 - Castle Defender
-                        # 1716 - Squire
-                        # 1717 - Native Hunter
-                        # 1718 - Crusader
-                        # 1719 - Arrowstorm Caster
-                        # 1720 - Lightning Bolt Caster
-                        # 1723 - Dwarf Engineer Dougie
-                        # 1724 - Youth Pastor Craig
-                        # 1725 - Shieldmaiden Wendy
-                        # 1726 - Stan the Great
-                        # 1727 - Indian Brute
-                        # 1728 - Subzero Titan
-                        # 1735 - Mormon Missionary
-                        # 1736 - Witch Doctor Token
-                        # 1737 - Shieldmaiden Wendy
-                        # 1738 - Imp Tweek
-                        # 1740 - Smuggler Ike
-                        ##1804: b'Medusa Bebe', \
-                        ##1805: b'Robo Bebe', \
-                        ##1806: b'Blood Elf Bebe', \
-                        ##1808: b'Buccaneer Bebe', \
-                        ##1813: b'Visitors', \
-                        # 1820 - Snake
-                        ##1824: b'Four-Assed Monkey', \
-                        # 1841 - Terrance and Phillip
-                        # 1843 - Underpants Gnomes
-                        # 1845 - A Rat
-                        ##1869: b'Marcus', \
-                        # 1870 - Terrance and Phillip
-                        ##1872: b'Mr. Hankey', \
-                        ##1886: b'PC Principal', \
-                        ##1923: b'Cupid Cartman', \
-                        ##1947: b'Towelie', \
-                        # 1948 - Visitors
-                        ##1949: b'Bounty Hunter Kyle', \
-                        ##1972: b'Dragonslayer Red', \
-                        ##1973: b'Classi', \
-                        ##1983: b'Imp Tweek', \
-                        ##2013: b'Swordsman Garrison', \
-                        ##2030: b'President Garrison', \
-                        ##2035: b'Mr. Slave Executioner', \
-                        # 2041 - Ice Sniper Wendy
-                        ##2042: b'Elven King Bradley', \
-                        ##2043: b'Priest Maxi', \
-                        ##2044: b'Swashbuckler Red', \
-                        ##2074: b'Mr Mackey', \
-                        ##2080: b'Satan', \
-                        ##2081: b'Santa Claus', \
-                        ##2091: b'Mosquito', \
-                        # 2093 - Mosquito Swarm
-                        ##2098: b'Tupperware', \
-                        ##2101: b'Alien Drone', \
-                        # 2102 - Auto-Vacuum
-                        ##2114: b'Sharpshooter Shelly', \
-                        ##2117: b'Super Fart', \
-                        ##2130: b'The Chomper', \
-                        ##2132: b'Fastpass', \
-                        ##2136: b'Call Girl', \
-                        ##2141: b'The Coon', \
-                        ##2143: b'Human Kite', \
-                        ##2144: b'Toolshed', \
-                        ##2147: b'Mysterion', \
-                        # 2169 - Toolshed
-                        # 2170 - Professor Chaos
-                        # 2171 - Mosquito
-                        # 2172 - Tupperware
-                        # 2176 - Call Girl
-                        # 2177 - Mysterion
-                        # 2181 - Fastpass
-                        # 2182 - Human Kite
-                        # 2183 - Tupperware
-                        # 2185 - The Coon
-                        ##2190: b'Lava!', \
-                        ##2195: b'Doctor Timothy', \
-                        ##2200: b'Captain Diabetes', \
-                        ##2202: b'Professor Chaos', \
-                        ##2209: b'Big Mesquite Murph', \
-                        ##2210: b'Sorceress Liane', \
-                        ##2216: b'Mintberry Crunch', \
-                        ##2217: b'Jesus', \
-                        ##2251: b'Sizzler Stuart', \
-                        ##2258: b'Mayor McDaniels', \
-                        ##2261: b'Wonder Tweek', \
-                        ##2262: b'Super Craig', \
-                        ##2266: b'Thunderbird', \
-                        ##2290: b'General Disarray', \
-                        ##2295: b'City Wok Guy', \
-                        ##2299: b'Dark Angel Red', \
-                        ##2308: b'Space Pilot Bradley', \
-                        ##2316: b'Chaos Hamsters', \
+                        
+                        
 
 
                         
@@ -1537,30 +1496,33 @@ class SPPDFilter:
                         # #59 --- 1522
                         # #60 --- 1523
                         
+                        pve_difficulty = 10000
+##                        pve_difficulty = 14
+                        
                         o['player_data']['episode'] = [\
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1515, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1514, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1517, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1516, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1518, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1515, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1514, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1517, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1516, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1518, 'special': 1}\
                                                                    ], 'id': 11, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1509, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1511, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1510, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1513, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1512, 'w': 25, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1509, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1511, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1510, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1513, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1512, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 10, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1520, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1519, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1521, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1522, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1523, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1520, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1519, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1521, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1522, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1523, 'special': 1}\
                                                                    ], 'id': 12, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1326, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1344, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1327, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1312, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1338, 'w': 25, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1326, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1344, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1327, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1312, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1338, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 1, 'star_level': 4}, \
                                 {'node': 0, 'state': 0, 'levels': [{'a': 0, 's': 0, 'id': 2135, 'w': 1, 'l': 0}, \
                                                                    {'a': 0, 's': 0, 'id': 2161, 'w': 1, 'l': 0}, \
@@ -1572,53 +1534,53 @@ class SPPDFilter:
                                                                    {'a': 0, 's': 0, 'id': 2159, 'w': 1, 'l': 0}, \
                                                                    {'a': 0, 's': 0, 'id': 2163, 'w': 1, 'l': 0}\
                                                                    ], 'id': 0, 'star_level': 1}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1410, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1411, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1412, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1413, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1415, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1410, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1411, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1412, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1413, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1415, 'special': 1}\
                                                                    ], 'id': 3, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 116, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1401, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1400, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1476, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1475, 'w': 25, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 116, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1401, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1400, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1476, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1475, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 2, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1420, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1664, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1663, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1662, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1661, 'w': 25, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1420, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1664, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1663, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1662, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1661, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 5, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1418, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1419, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1660, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1416, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1417, 'w': 25, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1418, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1419, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1660, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1416, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1417, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 4, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1502, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1499, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1500, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1501, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1503, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1502, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1499, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1500, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1501, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1503, 'special': 1}\
                                                                    ], 'id': 7, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1498, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1494, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1495, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1496, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1497, 'w': 25, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1498, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1494, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1495, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1496, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1497, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 6, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1508, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1506, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1507, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1504, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1505, 'w': 25, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1508, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1506, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1507, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1504, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1505, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 9, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1524, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1525, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1526, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1527, 'w': 25, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': 25, 'id': 1528, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1524, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1525, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1526, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1527, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1528, 'special': 1}\
                                                                    ], 'id': 8, 'star_level': 4}]
                         # connection error
 ##                        del o['player_data']['balance']
