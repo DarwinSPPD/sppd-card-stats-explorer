@@ -12,7 +12,7 @@ IP address == local IP adress for machine, usually comes in form 192.168.xxx.xxx
 visit internal website mitm.it and follow instructions to install certificate for SSL connection interception
 ```
 
-# Lastest setup
+# Latest setup
 ```
 Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon.py
 
@@ -27,6 +27,15 @@ Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAd
 This addon tricks SPPD into using guest account,
 if used on fresh SPPD installation. Allows to use SPPD normally.
 This addon should be active in order to use guest account.
+```
+
+
+# Setup for tvt win count crawling
+```
+Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_TVT.py
+
+In addition to guest account setup, this addon also downloads all player data for top 50 teams, 
+whenever TvT leaderboard is being opened in game.
 ```
 
 # Setup for custom card levels
