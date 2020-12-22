@@ -1,7 +1,7 @@
 ## This python script requires mitmproxy library. Install it with following command: Scripts\pip.exe install mitmproxy
 ##
-## Usage command: Scripts\mitmweb.exe -s ./SPPDFilterMitmproxyAddon_GuestAccount.py
-## mitmdump can also be used instead of mitmweb
+## Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_Upgrades.py
+## mitmweb can also be used instead of mitmdump
 ##
 ## Mitmproxy API documentation is available by using this command: python.exe -m pydoc mitmproxy
 ##
@@ -20,19 +20,33 @@ from mitmproxy.addons import clientplayback
 import queue
 import gc
 import ast
+import os
 
 
-##DEF_USE_CUSTOM_UPGRADE_LEVEL = [True]
+
+DEF_ENABLE_DEBUG_LOG = [False]
+
+## enables log_db_entry() call. Used for debugging.
+
+DEF_ENABLE_FILE_CACHE = [False]
+
+## enables log_db_cache() call. Used to generate bootstrap file that includes all game assets needed for offline mode.
+## To generate complete bootstrap file, use this script on the new instance of MEmu emulator.
+## Reminder: launch mitmproxy before opening SPPD for the first time.
+
+DEF_USE_CUSTOM_UPGRADE_LEVEL = [True]
 
 ## If DEF_USE_CUSTOM_UPGRADE_LEVEL is set, this addon rewrites card levels and upgrades, 
 ## allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
 ## block every other SPPD functionality.
 
-DEF_USE_CUSTOM_UPGRADE_LEVEL = [False]
+##DEF_USE_CUSTOM_UPGRADE_LEVEL = [False]
 
 ## If DEF_USE_CUSTOM_UPGRADE_LEVEL is not set, this addon tricks SPPD into using guest account,
 ## if used on fresh SPPD installation. Allows to use SPPD normally.
 ## This addon should be active in order to use guest account.
+
+customsppdnickname = {}
 
 ## Variables below DEF_UPGRADE_LEVEL, DEF_CUSTOM_CARDS, DEF_DAILY_DEAL_LOOT
 ## only have effect if DEF_USE_CUSTOM_UPGRADE_LEVEL is set.
@@ -45,6 +59,15 @@ DEF_UPGRADE_LEVEL = ['lvl 1, 1/5']
 ## DEF_UPGRADE_LEVEL does not works with non playable cards, these cards need to loaded into a deck using
 ## DEF_CUSTOM_CARDS variable. In order for non playable cards to show up in deck builder, these cards
 ## need to be received from packs first. See free pack logic referenced in code.
+
+DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL = [True]
+
+## Works only works if DEF_USE_CUSTOM_UPGRADE_LEVEL is enabled
+## If DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL is set to True, free pack gives all required resources to level 7.
+## Used for showing off all upgrades given in DEF_CARDS_EXCLUDED_EXCEPTION variable.
+
+## If False, then the nickname and free packs are adjusted to include cards from variable DEF_CUSTOM_CARD_TEST.
+## Used for PVE gameplay with custom cards
 
 DEF_ENABLE_TVT_CRAWLER = [False]
 
@@ -69,103 +92,82 @@ DEF_ENABLE_PLAYER_LEADERBOARD_CRAWLER = [False]
 
 DEF_ENABLE_TVT_LEADERBOARD_LIST_CRAWLER = [False]
 
+DEF_CUSTOM_CARD_TEST = [2365]
 
+## DEF_CUSTOM_CARD_TEST sets cards for demo PVE gameplay. Sets card id inside
+## sppd deck and alters nickname.
+## works only if DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL is False
 
-DEF_CUSTOM_CARDS = [[1806, 66, 1690, 1845, 1652, 1659, 141, 1656, 2147, 2216, 1655, 57]]
-
-
-DEF_pve_difficulty = [14]
-##DEF_CUSTOM_CARDS = [[28, 35, 45, 1700, 1701]]
-# cards
-                        # 1 - Interrupts reading deck information, freezes free pack animation and the game
-
-                        ## See card info at variables CharacterNames and CharacterNamesNonPlayable
-                        
-                        
-
+DEF_CUSTOM_CARDS = [[]]
+if not DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL[0]:
+        DEF_CUSTOM_CARDS[0] = [1216, 1656, 1672, 2299, DEF_CUSTOM_CARD_TEST[0]]
 
 
 
 ## DEF_CUSTOM_CARDS loads a list of cards into sppd deck
 
+DEF_pve_difficulty = [1]
+
+## DEF_pve_difficulty variable sets win count for each PVE campaign level.
+
+
 DEF_DAILY_DEAL_LOOT = [{'items': [262, 1]}]
 
 ## DEF_DAILY_DEAL_LOOT places any item of choice in daily deal window
 
-DEF_CARDS_EXCLUDED = [[1674, 1872, 1666, 1407, 1947, 1869, \
-                       2258,  15, 1886, 1684, 1670, \
-                       1680, 1665, 1682, 1973, 1661, 2030, \
-                       2081, 1683, 2080, 1672, 1701,  \
-                       131,  27, 35, 50, 134, \
-                       92, 200, 2114, 205, 1276, 1288, \
-                       1808, 186, 28, 8, 45, 12, \
-                       2044, 2266, 2209, 48, 10, 24, \
-                       2013, 55, 209, 203, 193, 1949, \
-                       1824, 40, 133,  1657, 30, \
-                       1805,  1813, 46, 2101, 146, \
-                       1269, 49, 88, 1272, 1311, 2251, \
-                       1509, 38, 137, 84, 1286, 1273, \
-                        1923, 2299, 208, 51, 138, \
-                       31, 1277, 132, 1218, 158, 1307, \
-                       85, 1983, 2217, 1804, 1504, 1216, \
-                       201, 44, 1274, 87, 2043, 57, \
-                       37, 1686, 1806, 144, 91, 61, \
-                       2042, 141, 29, 1656, 2295, 1972, \
-                       1506, 179, 89, 206, 47, 54, \
-                       135,  2035, 2210, 1655, 1472, \
-                       32, 2200, 2316, 2117, 2130,  \
-                       2190, 2091, 2202, 2262, 2144, 2195, \
-                       2290, 2143, 2216, 2098, 2261, 2147, \
-                       2141,  \
-                       \
-                       1441, 182, 1702, 1405, 1406, 184, 2102, 1820, 39, 2093, 1456, \
-                       \
-                       13, 14, 16, 33, 34, 36, \
-                       20, 23, 56, 63, 65, 70, \
-                       59, 66, 67, 68, 69, 71, \
-                       60, 72, 73, 76, 77, 78, \
-                       62, 79, 80, 143, 1278, 1298, \
-                       64, 185, 1319, 1320, 1324, 1331, \
-                       75, 1404, 1423, 1426, 1427, 1428, \
-                       1321, 1434, 1435, 1437, 1439, 1440, \
-                       1442, 1444, 1445, 1446, 1447, 1448, \
-                       1449, 1451, 1453, 1454, 1455, 1470, \
-                       1473, 1474, 1484, 1485, 1512, 1513, \
-                       1514, 1515, 1516, 1517, 1518, 1519, \
-                       1520, 1521, 1522, 1523, 1525, 1526, \
-                       1524, 1527, 1528, 1529, 1530, 1531, \
-                       1532, 1533, 1644, 1645, 1651, 1652, \
-                       1631, 1641, 1647, 1649, 1650, 1653, \
-                       1658, 1659, 1664, 1667, 1685, 1688, \
-                       1689, 1690, 1691, 1693, 1694, 1695, \
-                       1692, 1696, 1698, 1719, 1720, 1727, \
-                       1703, 1704, 1705, 1708, 1715, 1716, \
-                       1717, 1718, 1723, 1724, 1725, 1726, \
-                       1728, 1735, 1736, 1738, 1841, 1845, \
-                       1737, 1843, 1870, 2169, 2170, 2171, \
-                       1740, 2041, 2172, 2176, 2177, 2181, \
-                       1948, 2182, 2183, 2185, \
-                       \
-                       2319, \
-                       \
-                       1700, 2074, 86, 52, 140, 2136, 2132, 176, 2308]]
 
-## Changed cards at September 1, 2020
-##        1700: (b'Bandita Sally', DEF_Constants['adventure common']), \
-##        2074: (b'Mr Mackey', DEF_Constants['neutral common']), \
-##        86: (b'Angel Wendy', DEF_Constants['mystical common']), \
-##        52: (b'Ice Sniper Wendy', DEF_Constants['sci-fi rare']), \
-##        140: (b'Captain Wendy', DEF_Constants['adventure rare']), \
-##        2136: (b'Call Girl', DEF_Constants['superheroes legendary']), \
-##        2132: (b'Fastpass', DEF_Constants['superheroes epic']), \
-##        176: (b'Witch Garrison', DEF_Constants['fantasy rare']), \
-##        2308: (b'Space Pilot Bradley', DEF_Constants['sci-fi epic']), \
+
+
+DEF_CARDS_EXCLUDED = [[8, 10, 12, 13, 14, 15, 16, 20, 23, 24, 27, 28, 29, 30, \
+                       31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 47, \
+                       48, 49, 50, 51, 52, 54, 55, 56, 57, 59, 60, 61, 62, 63, \
+                       64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 75, 76, 77, 78, \
+                       79, 80, 84, 85, 86, 87, 88, 89, 91, 92, 131, 132, 133, \
+                       134, 135, 137, 138, 140, 141, 143, 144, 146, 158, 176, \
+                       179, 182, 184, 185, 186, 193, 200, 201, 203, 205, 206, \
+                       208, 209, 1216, 1218, 1269, 1272, 1273, 1274, 1276, \
+                       1277, 1278, 1286, 1288, 1298, 1307, 1311, 1319, 1320, \
+                       1321, 1324, 1331, 1404, 1405, 1406, 1407, 1423, 1426, \
+                       1427, 1428, 1434, 1435, 1437, 1439, 1440, 1441, 1442, \
+                       1444, 1445, 1446, 1447, 1448, 1449, 1451, 1453, 1454, \
+                       1455, 1456, 1470, 1472, 1473, 1474, 1484, 1485, 1504, \
+                       1506, 1509, 1512, 1513, 1514, 1515, 1516, 1517, 1518, \
+                       1519, 1520, 1521, 1522, 1523, 1524, 1525, 1526, 1527, \
+                       1528, 1529, 1530, 1531, 1532, 1533, 1631, 1641, 1644, \
+                       1645, 1647, 1649, 1650, 1651, 1652, 1653, 1655, 1656, \
+                       1657, 1658, 1659, 1661, 1664, 1665, 1666, 1667, 1670, \
+                       1672, 1674, 1680, 1682, 1683, 1684, 1685, 1686, 1688, \
+                       1689, 1690, 1691, 1692, 1693, 1694, 1695, 1696, 1698, \
+                       1700, 1701, 1702, 1703, 1704, 1705, 1708, 1715, 1716, \
+                       1717, 1718, 1719, 1720, 1723, 1724, 1725, 1726, 1727, \
+                       1728, 1735, 1736, 1737, 1738, 1740, 1804, 1805, 1806, \
+                       1808, 1813, 1820, 1824, 1841, 1843, 1845, 1869, 1870, \
+                       1872, 1886, 1923, 1947, 1948, 1949, 1972, 1973, 1983, \
+                       2013, 2030, 2035, 2041, 2042, 2043, 2044, 2074, 2080, \
+                       2081, 2091, 2093, 2098, 2101, 2102, 2114, 2117, 2130, \
+                       2132, 2136, 2141, 2143, 2144, 2147, 2169, 2170, 2171, \
+                       2172, 2176, 2177, 2181, 2182, 2183, 2185, 2190, 2195, \
+                       2200, 2202, 2209, 2210, 2216, 2217, 2220, 2251, 2258, \
+                       2261, 2262, 2266, 2290, 2295, 2299, 2308, 2316, 2317, \
+                       2319, 2324, 2325, 2326, 2327, 2337, 2360, 2365]]
+
+if DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL[0]:
+        DEF_CARDS_EXCLUDED_EXCEPTION = [[2365]]
+
+        _temp_len = len(DEF_CARDS_EXCLUDED_EXCEPTION[0])
+        _temp_i = 0
+        while _temp_i < _temp_len:
+                DEF_CARDS_EXCLUDED[0].remove(DEF_CARDS_EXCLUDED_EXCEPTION[0][_temp_i])
+                _temp_i += 1
 
 
 
 ##DEF_CARDS_EXCLUDED = [[]]
 
 ## DEF_CARDS_EXCLUDED sets card level to 7 (only for playable characters) and removes upgrade items for these cards
+## Works only if DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL is enabled
+
+## DEF_CARDS_EXCLUDED_EXCEPTION removes given cards from DEF_CARDS_EXCLUDED. Inverts the function of DEF_CARDS_EXCLUDED
 
 upgradedict = {\
         'lvl 1, 1/5': {'s': 0, 'c': 0, 'x': 0, 'w': 1.0},\
@@ -467,7 +469,16 @@ CharacterNames = {\
         2081: (b'Santa Claus', DEF_Constants['neutral epic']), \
         1683: (b'Officer Barbrady', DEF_Constants['neutral rare']), \
         2080: (b'Satan', DEF_Constants['neutral legendary']), \
-        1672: (b'ManBearPig', DEF_Constants['neutral legendary'])}
+        1672: (b'ManBearPig', DEF_Constants['neutral legendary']), \
+        2317: (b'Mary Jane Randy', DEF_Constants['superheroes epic']), \
+        2324: (b'Firkle', DEF_Constants['neutral common']), \
+        2325: (b'Michael', DEF_Constants['neutral rare']), \
+        2326: (b'Pete', DEF_Constants['neutral epic']), \
+        2327: (b'Henrietta', DEF_Constants['neutral legendary']), \
+        2360: (b'Alternate Human Kite', DEF_Constants['superheroes rare']), \
+        2365: (b'Woodland Critters', DEF_Constants['neutral epic'])}
+
+
 
 CharacterNamesNonPlayable = {\
         13: (b'Mimsy', DEF_Constants['adventure common']), \
@@ -479,7 +490,7 @@ CharacterNamesNonPlayable = {\
         20: (b'Sheriff Cartman', DEF_Constants['adventure rare']), \
         23: (b'Stan of Many Moons', DEF_Constants['adventure common']), \
         56: (b'Pocahontas Randy', DEF_Constants['adventure epic']), \
-        63: (b'Stan of Many Moons', DEF_Constants['adventure common']), \
+        63: (b'Stan of Many Moons (Not playable)', DEF_Constants['adventure common']), \
         65: (b'Poseidon Stan', DEF_Constants['mystical common']), \
         70: (b'Deckhand Butters', DEF_Constants['adventure common']), \
         59: (b'(Not playable)', DEF_Constants['neutral common']), \
@@ -495,7 +506,7 @@ CharacterNamesNonPlayable = {\
         77: (b'Nathan', DEF_Constants['adventure rare']), \
         78: (b'Mimsy', DEF_Constants['adventure common']), \
         62: (b'(Not playable)', DEF_Constants['neutral common']), \
-        79: (b'Pocahontas Randy', DEF_Constants['neutral common']), \
+        79: (b'Pocahontas Randy (Not playable)', DEF_Constants['neutral common']), \
         80: (b'Medicine Woman Sharon', DEF_Constants['adventure common']), \
         143: (b'Imp Tweek', DEF_Constants['mystical common']), \
         1278: (b'MISSING:DF_NAME_SPELLDARKRESURRECT', DEF_Constants['mystical rare without upgrades']), \
@@ -618,10 +629,10 @@ CharacterNamesNonPlayable = {\
         2182: (b'Human Kite', DEF_Constants['superheroes common']), \
         2183: (b'Tupperware', DEF_Constants['superheroes common']), \
         2185: (b'The Coon', DEF_Constants['superheroes common']), \
-        \
-        1441: (b'Indian Brave', DEF_Constants['adventure epic']), \
         182: (b'Gizmo Ike', DEF_Constants['sci-fi epic']), \
         184: (b'Gizmo Ike', DEF_Constants['sci-fi epic']), \
+        \
+        1441: (b'Indian Brave', DEF_Constants['adventure epic']), \
         1702: (b'Auto-Vacuum', DEF_Constants['sci-fi legendary']), \
         2102: (b'Auto-Vacuum', DEF_Constants['sci-fi legendary']), \
         1820: (b'Snake', DEF_Constants['mystical legendary']), \
@@ -629,14 +640,21 @@ CharacterNamesNonPlayable = {\
         1406: (b'A Rat', DEF_Constants['neutral common']), \
         1405: (b'A Rat', DEF_Constants['neutral common']), \
         1456: (b'A Cock', DEF_Constants['neutral epic']), \
-        2093: (b'Mosquito Swarm', DEF_Constants['superheroes rare'])}
+        2093: (b'Mosquito Swarm', DEF_Constants['superheroes rare']), \
+        2220: (b'Potted Plant', DEF_Constants['superheroes epic']), \
+        2337: (b'Gizmo Ike', DEF_Constants['sci-fi epic'])}
 
 
 
 
 
 def log_db_entry(flow_):
-        with open('tvtdatabase.db', 'ab', buffering=0) as db_f:
+        if not DEF_ENABLE_DEBUG_LOG[0]:
+                return
+        db_filename = 'database.db'
+        if DEF_ENABLE_TVT_CRAWLER[0]:
+                db_filename = 'tvtdatabase.db'
+        with open(db_filename, 'ab', buffering=0) as db_f:
                 db_entry = {'flow.request.scheme': flow_.request.scheme, \
                  'flow.request.method': flow_.request.method, \
                  'flow.request.http_version': flow_.request.http_version, \
@@ -649,17 +667,62 @@ def log_db_entry(flow_):
                  'time.time()': time.time()}
                 db_entry_binary = json.dumps(db_entry).encode()
                 db_f.write(b'\n'+(len(db_entry_binary).to_bytes(4, byteorder='big'))+db_entry_binary)
-                try:
-                        if json.loads(flow_.response.content.decode())["httpCode"] == 401:
-                                customrequestqueue_last_header[0] = None
-                                mitmproxy.ctx.log.info('WARNING: Server responded code 401, manual app refresh required!')
-                except KeyError:
-                        pass
-                except json.decoder.JSONDecodeError:
-                        pass
+                if DEF_ENABLE_TVT_CRAWLER[0]:
+                        try:
+                                if json.loads(flow_.response.content.decode())["httpCode"] == 401:
+                                        customrequestqueue_last_header[0] = None
+                                        mitmproxy.ctx.log.info('WARNING: Server responded code 401, manual app refresh required!')
+                        except KeyError:
+                                pass
+                        except json.decoder.JSONDecodeError:
+                                pass
 
 
-
+def log_db_cache(flow_):
+        if not DEF_ENABLE_FILE_CACHE[0]:
+                return
+        db_filename = 'filedatabase.db'
+        try:
+                os.mkdir(r'filecache')
+        except OSError:
+                pass
+        time_time = time.time()
+        allowed_characters = '-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz'
+        response_content_path = ''
+        try:
+                response_content_path_cache = 'filecache\\' + str(time_time) + '.'
+                response_content_path_cache_2 = ''
+                flow__request_url_cache = flow_.request.url
+                i = 0
+                while i < len(flow__request_url_cache):
+                        if flow__request_url_cache[i] in allowed_characters:
+                                response_content_path_cache_2 += flow__request_url_cache[i]
+                        i += 1
+                response_content_path_cache += response_content_path_cache_2[-127:]
+                with open(response_content_path_cache, 'ab', buffering=0) as db_response_file:
+                        db_response_file.write(flow_.response.content)
+                response_content_path = response_content_path_cache
+        
+        except OSError:
+                pass
+        with open(db_filename, 'ab', buffering=0) as db_f:
+                db_entry = {'flow.request.scheme': flow_.request.scheme, \
+                 'flow.request.method': flow_.request.method, \
+                 'flow.request.http_version': flow_.request.http_version, \
+                 'flow.request.host': flow_.request.host, \
+                 'flow.request.port': flow_.request.port, \
+                 'flow.request.path': flow_.request.path, \
+                 'flow.request.url': flow_.request.url, \
+                 'repr(flow.request.content)': repr(flow_.request.content), \
+                 'len(flow.response.content)': len(flow_.response.content), \
+                 'response_content_path': response_content_path, \
+                 'time.time()': time_time, \
+                 'repr(flow.request.headers)': repr(flow_.request.headers), \
+                 'repr(flow.response.headers)': repr(flow_.response.headers)}
+                
+                db_entry_binary = json.dumps(db_entry).encode()
+                db_f.write(b'\n'+(len(db_entry_binary).to_bytes(4, byteorder='big'))+db_entry_binary)
+                mitmproxy.ctx.log.info('captured response flow.request.url == ' + repr(flow_.request.url))
 
 
 
@@ -747,6 +810,19 @@ class SPPDFilter:
 ##                        if flow.request.url == 'https://android.clients.google.com/fdfe/ees/bulkAcquire?nocache_qos=lt':
 ##                                break
                         if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start':
+                                if DEF_USE_CUSTOM_UPGRADE_LEVEL[0]:
+                                        
+                                        if "Authorization" in flow.request.headers:
+                                                mitmproxy.ctx.log.info('flow.request.headers["Authorization"] == ' + repr(flow.request.headers["Authorization"]))
+                                        o = json.loads(flow.request.content.decode())
+                                        if "name" in o:
+                                                mitmproxy.ctx.log.info('json.loads(flow.request.content.decode())["name"] == ' + repr(o["name"]))
+                                        
+                                        Authorization_ticket = flow.request.headers["Authorization"].split('=')[1]
+                                        if Authorization_ticket in customsppdnickname:
+                                                o["name"] = customsppdnickname[Authorization_ticket][0]
+                                        flow.request.content = json.dumps(o).encode()
+                                        
                                 break
                         if flow.request.url.startswith('http://mitm.it/'):
                                 break
@@ -775,6 +851,23 @@ class SPPDFilter:
                                 break
                         if flow.request.url.startswith('https://lh3.googleusercontent.com/'):
                                 break
+                        if flow.request.url.startswith('https://android.clients.google.com/fdfe/toc?'):
+                                break
+                        if flow.request.url.startswith('https://android.clients.google.com/fdfe/myApps'):
+                                break
+                        if flow.request.url.startswith('https://android.clients.google.com/fdfe/bulkDetails'):
+                                break
+                        if flow.request.url.startswith('https://android.clients.google.com/fdfe/uploadDeviceConfig'):
+                                break
+                        if flow.request.url.startswith('https://play-lh.googleusercontent.com/'):
+                                break
+                        if flow.request.url.startswith('https://android.clients.google.com/fdfe/getHomeStream?'):
+                                break
+                        if flow.request.url.startswith('https://android.clients.google.com/fdfe/details?'):
+                                break
+
+
+
 
 
                         
@@ -794,6 +887,11 @@ class SPPDFilter:
                                 if flow.request.url.startswith('https://gamesrv02-mob.ubi.com/?action=get'):
                                         break
                         if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] == True:
+                                if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/pvp2/season_finish':
+                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+                                                                                         json.dumps([]))
+                                        mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
+                                        break
                                 if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/store/catalogs?id=7,8,9,10,11,12&'):
                                         dumped_data = [\
                                                 \
@@ -893,6 +991,7 @@ class SPPDFilter:
                                                                                                                 "67034ed91eac55df78f352d9035cec11ad0386ba9ce6ab2fa8fe3f12ae6ae0e6",\
                                                                                                                 "data": [9869608],"time": int(time.time())}}))
                                         mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url) + ', flow.request.content == '+repr(flow.request.content))
+                                        log_db_entry(flow)
                                         break
                                 if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/battle/finish':
 ##                                        if DEF_pve_difficulty[0] == 0 and flow.request.content != None and flow.request.content[0:1] == b'{' and json.loads(flow.request.content.decode())["level_id"] == 1327:
@@ -925,6 +1024,7 @@ class SPPDFilter:
                                                 flow.response = mitmproxy.http.HTTPResponse.make(200, json.dumps({}))
 
                                         mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url) + ', flow.request.content == '+repr(flow.request.content))
+                                        log_db_entry(flow)
                                         break
 # Free pack logic here
                                 if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/store/purchases':
@@ -943,12 +1043,14 @@ class SPPDFilter:
                                         break
                                 if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/cardpack/cardpacks/free':
                                         debug_time_start = time.time()
-##                                        cards_field_i = 2
+                                        cards_field_i = 2365
 ##                                        cards_field = [{"id": 1407,"quantity": 0}]
                                         cards_field = []
-##                                        while cards_field_i <= 2:
-##                                                cards_field.append({"id": cards_field_i,"quantity": 1})
-##                                                cards_field_i += 1
+                                        while cards_field_i <= 2365:
+                                                #card id 1 is a NK that kills pack opening 
+                                                if (cards_field_i not in CharacterNames) and (cards_field_i not in CharacterNamesNonPlayable) and cards_field_i != 1:
+                                                        cards_field.append({"id": cards_field_i,"quantity": 1})
+                                                cards_field_i += 1
                                         #206
 ##                                        cards_field.append({"id": 206,"quantity": 4315})
                                         ## legendary to level 7
@@ -1438,46 +1540,46 @@ class SPPDFilter:
 
 
                                         items_field_cache = {}
-                                        
-                                        CharacterIdList = list(CharacterNames)
-                                        i = 0
-                                        while i < len(CharacterIdList):
-                                                if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
-                                                        pass
-                                                else:
-                                                        tempName_unused, tempCardData = CharacterNames[CharacterIdList[i]]
-                                                        tempCardCount, tempItemList = tempCardData
-                                                        cards_field.append({"id": CharacterIdList[i], "quantity": tempCardCount})
-                                                        j = 0
-                                                        while j < len(tempItemList):
-                                                                tempItemId, tempItemCount = tempItemList[j]
-                                                                if tempItemId in items_field_cache:
-                                                                        items_field_cache[tempItemId] += tempItemCount
-                                                                else:
-                                                                        items_field_cache[tempItemId] = tempItemCount
-                                                                j += 1
-                                                i += 1
-                                        
-                                        CharacterIdList = list(CharacterNamesNonPlayable)
-                                        i = 0
-                                        while i < len(CharacterIdList):
-                                                if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
-                                                        pass
-                                                elif CharacterIdList[i] not in DEF_CUSTOM_CARDS[0]:
-                                                        pass
-                                                else:
-                                                        tempName_unused, tempCardData = CharacterNamesNonPlayable[CharacterIdList[i]]
-                                                        tempCardCount, tempItemList = tempCardData
-                                                        cards_field.append({"id": CharacterIdList[i], "quantity": tempCardCount})
-                                                        j = 0
-                                                        while j < len(tempItemList):
-                                                                tempItemId, tempItemCount = tempItemList[j]
-                                                                if tempItemId in items_field_cache:
-                                                                        items_field_cache[tempItemId] += tempItemCount
-                                                                else:
-                                                                        items_field_cache[tempItemId] = tempItemCount
-                                                                j += 1
-                                                i += 1
+                                        if DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL[0]:
+                                                CharacterIdList = list(CharacterNames)
+                                                i = 0
+                                                while i < len(CharacterIdList):
+                                                        if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
+                                                                pass
+                                                        else:
+                                                                tempName_unused, tempCardData = CharacterNames[CharacterIdList[i]]
+                                                                tempCardCount, tempItemList = tempCardData
+                                                                cards_field.append({"id": CharacterIdList[i], "quantity": tempCardCount})
+                                                                j = 0
+                                                                while j < len(tempItemList):
+                                                                        tempItemId, tempItemCount = tempItemList[j]
+                                                                        if tempItemId in items_field_cache:
+                                                                                items_field_cache[tempItemId] += tempItemCount
+                                                                        else:
+                                                                                items_field_cache[tempItemId] = tempItemCount
+                                                                        j += 1
+                                                        i += 1
+                                                
+                                                CharacterIdList = list(CharacterNamesNonPlayable)
+                                                i = 0
+                                                while i < len(CharacterIdList):
+                                                        if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
+                                                                pass
+                                                        elif CharacterIdList[i] not in DEF_CUSTOM_CARDS[0]:
+                                                                pass
+                                                        else:
+                                                                tempName_unused, tempCardData = CharacterNamesNonPlayable[CharacterIdList[i]]
+                                                                tempCardCount, tempItemList = tempCardData
+                                                                cards_field.append({"id": CharacterIdList[i], "quantity": tempCardCount})
+                                                                j = 0
+                                                                while j < len(tempItemList):
+                                                                        tempItemId, tempItemCount = tempItemList[j]
+                                                                        if tempItemId in items_field_cache:
+                                                                                items_field_cache[tempItemId] += tempItemCount
+                                                                        else:
+                                                                                items_field_cache[tempItemId] = tempItemCount
+                                                                        j += 1
+                                                        i += 1
                                                 
                                         items_field_cache_list = list(items_field_cache)
                                         i = 0
@@ -1565,7 +1667,31 @@ class SPPDFilter:
                         mitmproxy.ctx.log.info('blocked flow.request.url == ' + repr(flow.request.url))
                         flow.response = mitmproxy.http.HTTPResponse.make(200)
                         break
+
+
+
+
+
+
+
+
+
+
+                
         def response(self, flow):
+                
+                if flow.request.url.startswith('https://ubistatic-a.akamaihd.net/0081/'):
+                        log_db_cache(flow)
+                if flow.request.url.startswith('https://public-ubiservices.ubi.com/v1/applications/b5f1619b-8612-4966-a083-2fac253e2090/configuration'):
+                        log_db_cache(flow)
+                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/version'):
+                        log_db_cache(flow)
+                if flow.request.url.startswith('https://connectivitycheck.gstatic.com/generate_204'):
+                        log_db_cache(flow)
+                if flow.request.url.startswith('https://public-ubiservices.ubi.com/v3/profiles/sessions'):
+                        log_db_cache(flow)
+                if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start'):
+                        log_db_cache(flow)
                 customrequestqueue_pending_flow_request_url = None
                 try:
                         customrequestqueue_pending_flow_request_url = customrequestqueue_pending[flow.request.url]
@@ -1575,7 +1701,30 @@ class SPPDFilter:
                                 mitmproxy.ctx.log.info('unrecognised flow.request.url == ' + repr(flow.request.url) + ' absent from len(list(customrequestqueue_pending)) == ' + repr(len(list(customrequestqueue_pending))))
                         pass
 ##                mitmproxy.ctx.log.info('flow.request.url == ' + repr(flow.request.url))
+                if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] and flow.request.url == 'https://public-ubiservices.ubi.com/v3/profiles/sessions':
+                        o = json.loads(flow.response.content.decode())
+                        o_ticket = None
+                        o_nameOnPlatform = None
+                        o_nameOnPlatform_new = 'OFFLINE_MODE'
+                        try:
+                                if not DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL[0]:
+                                        o_nameOnPlatform_new_temp = 'CARD_'+str(DEF_CUSTOM_CARD_TEST[0])
+                                        o_nameOnPlatform_new = o_nameOnPlatform_new_temp
+                        except IndexError:
+                                pass
+                        if "ticket" in o:
+                                mitmproxy.ctx.log.info('json.loads(flow.response.content.decode())["ticket"] == ' + repr(o["ticket"]))
+                                o_ticket = o["ticket"]
+                        if "nameOnPlatform" in o:
+                                mitmproxy.ctx.log.info('json.loads(flow.response.content.decode())["nameOnPlatform"] == ' + repr(o["nameOnPlatform"]))
+                                o_nameOnPlatform = o["nameOnPlatform"]
+                        if o_ticket != None and o_nameOnPlatform != None:
+                                customsppdnickname.update({o_ticket: (o_nameOnPlatform, o_nameOnPlatform_new)})
+                                o["nameOnPlatform"] = o_nameOnPlatform_new
+                                flow.response.content = json.dumps(o).encode()
+                                
                 if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] and flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start':
+                        log_db_entry(flow)
                         o = json.loads(flow.response.content.decode())
 ##                        mitmproxy.ctx.log.info('len(flow.response.content) == ' + repr(len(flow.response.content)))
 ##                        mitmproxy.ctx.log.info('original o[\'pvp\'] == ' + repr(o['pvp']))
@@ -1681,22 +1830,77 @@ class SPPDFilter:
                                                      1348, 1, 1349, 1, 1346, 1, 1347, 1, 1372, 1, 1377, 1, 1379, 1, 1359, 1, \
                                                      1358, 1, 1353, 1, 1352, 1, 1351, 1, 1350, 1, 1357, 1, 1356, 1, 1355, 1, \
                                                      1354, 1, 1366, 1, 1367, 1, 1364, 1, 1365, 1]
-                        if 'messages' in o['player_data']:
-                                del o['player_data']['messages']
-                        if 'common' in o['player_data']:
-                                del o['player_data']['common']
+##                        if 'messages' in o['player_data']:
+##                                del o['player_data']['messages']
+                        o['player_data']['messages'] = {"11": [4747459394048, 4751754361348], \
+                                                        "10": [5815483980, 108894708110, 113189675410], \
+                                                        "12": [5159776248242, 5168366183192, 5172661150493], \
+                                                        "15": [6448266491287, 6452561458615], \
+                                                        "21": [90195833732735, 90200128700034, 90204423667334, 90208718634633, 90213013601933, 90217308573174, \
+                                                               90324682757628, 90328977724928, 90333272692228, 90337567659527, 90341862626826, 90367632432337, \
+                                                               90389107268869, 90440646876666, 90444941843965, 90449236811264, 90453531778565, 90457826745865, \
+                                                               90462121713165, 90466416680465, 90470711647764, 90475006615064, 90539431124876, 90543726092175, \
+                                                               90548021059475, 90552316026774, 90556610994075, 90582380797997, 90625330471070, 90629625438369, \
+                                                               90633920405669, 90638215372968, 90642510340268, 90646805307567, 90711229822732, 90715524790031, \
+                                                               90719819757330, 90724114724721, 90728409692020, 90732704659319, 90736999626618, 90741294593917, \
+                                                               90745589561216, 90754179495993, 90758474463293, 90797129169176, 90801424136476, 90805719103775, \
+                                                               90810014071075, 90840078842229, 90844373809529, 90848668776828, 90852963744128, 90857258711427, \
+                                                               90861553678727, 90883028515328, 90887323482628, 90925978188568, 90930273155933, 91011877534784, \
+                                                               91016172502084, 91020467469383, 91054827207927, 91059122175226, 91063417142526], \
+                                                        "22": [94490801045583, 94495096012883, 94533750718730, 94538045686030, 94542340653329, 94546635620629, \
+                                                               94550930587928, 94963247493041, 94967542460341, 94971837427640, 95006197166325, 95010492133625, \
+                                                               95014787100924, 95049146839667, 95053441806967, 95057736774267, 95135046185920, 95139341153219, \
+                                                               95177995858920, 95182290826220, 95186585793519, 95190880760819, 95220945532093, 95225240499393, \
+                                                               95229535466692, 95233830433992, 95349794551153, 95354089518452, 95358384485752, 95362679453051, \
+                                                               95366974420351, 95371269387651, 95375564354950, 95392744267017, 95397039234317, 95435693940053, \
+                                                               95439988907353, 95444283874653, 95478643613209, 95482938580550, 95487233547850], \
+                                                        "23": [98785768506697, 98790063473997, 98794358441296, 98798653408596, 98802948375895, 98807243343195, \
+                                                               98828718180131, 98833013147431, 98837308114731, 98841603082030, 98845898049330, 98850193016629, \
+                                                               98871667892759, 98875962860059, 98880257827358, 98884552794658, 98888847761957, 98914617569619, \
+                                                               98918912536929, 98923207504229, 98957567242916, 98961862210215, 98966157177515, 98970452144814, \
+                                                               98974747112114, 98979042079414, 99000516916208, 99004811883508, 99009106850807, 99013401818107, \
+                                                               99086416294138, 99090711261438, 99215265359510, 99219560326810, 99223855294109, 99228150261409, \
+                                                               99232445228709, 99236740196008, 99241035163308, 99129366013700, 99133660980999, 99137955948299, \
+                                                               99172315686926, 99176610654226, 99180905621526, 99258215033012, 99262510000312, 99266804967611, \
+                                                               99271099934911, 99275394902211], \
+                                                        "45": [193318010521269, 193330900263517, 193335195913351, 193339492607318, 193322313354024, 193326608927164], \
+                                                        "60": [257699600947165, 257703895914465, 257742550620140, 257746845587440, 257785500299964, 257828449973054, \
+                                                               257832744940354, 257957299024770, 258043198379720, 258086148079210, 258129097804774, 258172047511899, \
+                                                               258214997209101, 258257946940570, 258262241907870, 258266536875170, 258300896634904, 258305191602204, \
+                                                               258309486569503, 258313781536803, 258343846337881, 258386796023223, 258391090990523, 258429745747607, \
+                                                               258644494173352, 258515645154723, 258519940122023, 258524235089323, 258528530056622, 258532825023922, \
+                                                               258537119991221, 258541414958521], \
+                                                        "24": [103080735926871, 103085030894171, 103089325861470, 103093620828770, 103097915796069, 103166635273474, \
+                                                               103170930240774, 103123685600758, 103127980568057, 103132275535357, 103136570502656, 103140865469956, \
+                                                               103145160437256, 103209584947261, 103213879914560, 103252534738016, 103256829705315, 103261124672615, \
+                                                               103265419639915, 103269714607214, 103274009574514, 103424333440557, 103428628407857, 103432923375157, \
+                                                               103437218342457, 103441513309757, 103445808277057, 103467283140396, 103510233773300, 103514528740600, \
+                                                               103518823707899, 103523118675199, 103527413642498, 103531708609798, 103536003577097, 103295485408555, \
+                                                               103299780375854, 103304075343154, 103338435204615, 103342730171914, 103553183591477, 103557478558776, \
+                                                               103561773526076, 103566068493375, 103570363460675, 103574658427974, 103596133803939, 103600428771238, \
+                                                               103604723738538, 103609018705837, 103613313673137, 103617608640437, 103381385475450, 103385680442749, \
+                                                               103639083536520, 103643378503819, 103647673471119, 103651968438418, 103656263405718, 103660558373017, \
+                                                               103664853340317, 103682033210319, 103686328177619, 103690623144918, 103694918112218]}
+##                        if 'common' in o['player_data']:
+##                                del o['player_data']['common']
+                        o['player_data']['common'] = {"card_pack_timestamp": 1599472788, "episode_max": 13}
                         # pvp play button is gone
-                        if 'state' in o['player_data']:
-                                del o['player_data']['state']
+##                        if 'state' in o['player_data']:
+##                                del o['player_data']['state']
+                        o['player_data']['state'] = [201, -109051905, 200, -1333919907, 203, 31997952, 202, 134217727, \
+                                                     205, 6, 501, 100, 403, 766, 401, 536870911, 400, -2, \
+                                                     102, 0, 103, 26656948, 100, 1, 800, 12, 106, 12, 107, 6, 104, 1, 1000, 255]
                         if 'avatar' in o['player_data']:
                                 del o['player_data']['avatar']
                         # causes game to play opening scene
 ##                        del o['player_data']['episode']
 
                         ## 1563 - first campaign level
+                        ## 1838 - tutorial pvp match
 
                         ## level id constants
                         # #1 --- 1327
+                        # units: 34(1=1/5,15=57/70),33(1=1/5,15=57/70),1319(1=1/5), 23?(1=1/5)
                         # #2 --- 1344
                         # #3 --- 1338
                         # #4 --- 1326
@@ -1769,33 +1973,10 @@ class SPPDFilter:
                         # #60 --- 1523
                         
 ##                        pve_difficulty = 10000
+                        pve_difficulty_1 = 1
                         pve_difficulty = DEF_pve_difficulty[0]
-                        pve_difficulty_pre_mission = 1
+                        pve_difficulty_pre_mission = 0
                         o['player_data']['episode'] = [\
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1515, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1514, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1517, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1516, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1518, 'special': 1}\
-                                                                   ], 'id': 11, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1509, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1511, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1510, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1513, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1512, 'w': pve_difficulty, 'l': 25}\
-                                                                   ], 'id': 10, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1520, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1519, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1521, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1522, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1523, 'special': 1}\
-                                                                   ], 'id': 12, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1326, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1344, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1327, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1312, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1338, 'w': pve_difficulty, 'l': 25}\
-                                                                   ], 'id': 1, 'star_level': 4}, \
                                 {'node': 0, 'state': 0, 'levels': [{'a': 0, 's': 0, 'id': 2135, 'w': pve_difficulty_pre_mission, 'l': 0}, \
                                                                    {'a': 0, 's': 0, 'id': 2161, 'w': pve_difficulty_pre_mission, 'l': 0}, \
                                                                    {'a': 0, 's': 0, 'id': 1838, 'w': pve_difficulty_pre_mission, 'l': 0}, \
@@ -1806,54 +1987,91 @@ class SPPDFilter:
                                                                    {'a': 0, 's': 0, 'id': 2159, 'w': pve_difficulty_pre_mission, 'l': 0}, \
                                                                    {'a': 0, 's': 0, 'id': 2163, 'w': pve_difficulty_pre_mission, 'l': 0}\
                                                                    ], 'id': 0, 'star_level': 1}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1410, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1411, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1412, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1413, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1415, 'special': 1}\
-                                                                   ], 'id': 3, 'star_level': 4}, \
+                                \
+                                {'node': 0, 'state': 0, 'levels': [\
+                                        {'a': 2, 's': 52, 'id': 1327, 'w': pve_difficulty, 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1344, 'w': pve_difficulty, 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1338, 'w': pve_difficulty, 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1326, 'w': pve_difficulty, 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1312, 'w': pve_difficulty, 'l': 25}], 'id': 1, 'star_level': 4}, \
+                                \
                                 {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 116, 'special': 1}, \
                                                                    {'a': 2, 's': 52, 'id': 1401, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1400, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1476, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1475, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 2, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1420, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1664, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1663, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1662, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1661, 'w': pve_difficulty, 'l': 25}\
-                                                                   ], 'id': 5, 'star_level': 4}, \
+                                \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1410, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1411, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1412, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1413, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1415, 'special': 1}\
+                                                                   ], 'id': 3, 'star_level': 4}, \
+                                \
                                 {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1418, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1419, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1660, 'special': 1}, \
                                                                    {'a': 2, 's': 52, 'id': 1416, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1417, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 4, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1502, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1499, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1500, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1501, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1503, 'special': 1}\
-                                                                   ], 'id': 7, 'star_level': 4}, \
+                                \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1420, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1664, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1663, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1662, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1661, 'w': pve_difficulty, 'l': 25}\
+                                                                   ], 'id': 5, 'star_level': 4}, \
+                                \
                                 {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1498, 'special': 1}, \
                                                                    {'a': 2, 's': 52, 'id': 1494, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1495, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1496, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1497, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 6, 'star_level': 4}, \
+                                \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1502, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1499, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1500, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1501, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1503, 'special': 1}\
+                                                                   ], 'id': 7, 'star_level': 4}, \
+                                \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1524, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1525, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1526, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1527, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1528, 'special': 1}\
+                                                                   ], 'id': 8, 'star_level': 4}, \
+                                \
                                 {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1508, 'special': 1}, \
                                                                    {'a': 2, 's': 52, 'id': 1506, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1507, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1504, 'w': pve_difficulty, 'l': 25}, \
                                                                    {'a': 2, 's': 52, 'id': 1505, 'w': pve_difficulty, 'l': 25}\
                                                                    ], 'id': 9, 'star_level': 4}, \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1524, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1525, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1526, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1527, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1528, 'special': 1}\
-                                                                   ], 'id': 8, 'star_level': 4}]
+                                \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1509, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1511, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1510, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1513, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1512, 'w': pve_difficulty, 'l': 25}\
+                                                                   ], 'id': 10, 'star_level': 4}, \
+                                \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1515, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1514, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1517, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1516, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1518, 'special': 1}\
+                                                                   ], 'id': 11, 'star_level': 4}, \
+                                \
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1520, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1519, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1521, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1522, 'w': pve_difficulty, 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1523, 'special': 1}\
+                                                                   ], 'id': 12, 'star_level': 4}\
+                                ]
                         # connection error
 ##                        del o['player_data']['balance']
                         o['player_data']['balance'] = [{'code': 'PVP', 'value': 0}, \
@@ -1887,477 +2105,8 @@ class SPPDFilter:
                         templist.append({'c': 1, 'id': 1, 'w': 1.1})
 
 
-                        ## custom setup for cards
-                        
-                        if False:
-##                                elem_s = upgradedict[temp_upgrade]['s']
-##                                elem_c = upgradedict[temp_upgrade]['c']
-##                                elem_x = upgradedict[temp_upgrade]['x']
-##                                elem_w = upgradedict[temp_upgrade]['w']
-##                                CharacterNames = {\
-##        1701: (b'Calamity Heidi', DEF_Constants['adventure common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1701, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1700: (b'Bandita Sally', DEF_Constants['adventure common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1700, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        131: (b'Smuggler Ike', DEF_Constants['adventure common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 131, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        140: (b'Captain Wendy', DEF_Constants['adventure rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 140, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        27: (b'Deckhand Butters', DEF_Constants['adventure common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 27, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        35: (b'Gunslinger Kyle', DEF_Constants['adventure common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 35, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        50: (b'Hookhand Clyde', DEF_Constants['adventure epic']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 50, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        134: (b'Inuit Kenny', DEF_Constants['adventure legendary']), \
-##        92: (b'Pirate Ship Timmy', DEF_Constants['adventure rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 92, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        200: (b'Shaman Token', DEF_Constants['adventure common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 200, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2114: (b'Sharpshooter Shelly', DEF_Constants['adventure epic']), \
-##        205: (b'Storyteller Jimmy', DEF_Constants['adventure epic']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 205, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1276: (b'Arrowstorm', DEF_Constants['adventure epic without upgrades']), \
-##        1288: (b'Barrel Dougie', DEF_Constants['adventure rare']), \
-##        1808: (b'Buccaneer Bebe', DEF_Constants['adventure rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1808, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        186: (b'Lightning Bolt', DEF_Constants['adventure rare without upgrades']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 186, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        28: (b'Outlaw Tweek', DEF_Constants['adventure common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 28, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        8: (b'Medicine Woman Sharon', DEF_Constants['adventure rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 8, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        45: (b'Sheriff Cartman', DEF_Constants['adventure rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 45, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        12: (b'Stan of Many Moons', DEF_Constants['adventure legendary']), \
-##        2044: (b'Swashbuckler Red', DEF_Constants['adventure epic']), \
-##        2266: (b'Thunderbird', DEF_Constants['adventure rare']), \
-##        2209: (b'Big Mesquite Murph', DEF_Constants['adventure epic']), \
-##        48: (b'Incan Craig', DEF_Constants['adventure legendary']), \
-##        10: (b'Pocahontas Randy', DEF_Constants['adventure epic']), \
-##        24: (b'Fireball', DEF_Constants['adventure rare without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 24, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2013: (b'Swordsman Garrison', DEF_Constants['adventure rare']), \
-##        55: (b'Astronaut Butters', DEF_Constants['sci-fi common']), \
-##        209: (b'Enforcer Jimmy', DEF_Constants['sci-fi rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 209, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        203: (b'Space Warrior Token', DEF_Constants['sci-fi rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 203, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        193: (b'Alien Clyde', DEF_Constants['sci-fi common']), \
-                                temp_upgrade = 'lvl 3, 15/25'
-                                templist.append({'id': 193, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1949: (b'Bounty Hunter Kyle', DEF_Constants['sci-fi epic']), \
-##        1824: (b'Four-Assed Monkey', DEF_Constants['sci-fi rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1824, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        40: (b'Freeze Ray', DEF_Constants['sci-fi common without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 40, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        133: (b'Gizmo Ike', DEF_Constants['sci-fi epic']), \
-##        52: (b'Ice Sniper Wendy', DEF_Constants['sci-fi rare']), \
-##        1657: (b'Poison', DEF_Constants['sci-fi common without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1657, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        30: (b'Program Stan', DEF_Constants['sci-fi epic']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 30, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1805: (b'Robo Bebe', DEF_Constants['sci-fi common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1805, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2308: (b'Space Pilot Bradley', DEF_Constants['sci-fi epic']), \
-##        1813: (b'Visitors', DEF_Constants['sci-fi rare']), \
-##        46: (b'Warboy Tweek', DEF_Constants['sci-fi rare']), \
-##        2101: (b'Alien Drone', DEF_Constants['sci-fi epic']), \
-##        146: (b'Cyborg Kenny', DEF_Constants['sci-fi epic']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 146, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1269: (b'Hyperdrive', DEF_Constants['sci-fi rare without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1269, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        49: (b'Marine Craig', DEF_Constants['sci-fi common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 49, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        88: (b'Mecha Timmy', DEF_Constants['sci-fi legendary']), \
-##        1272: (b'Mind Control', DEF_Constants['sci-fi rare without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1272, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1311: (b'Powerfist Dougie', DEF_Constants['sci-fi rare']), \
-##        2251: (b'Sizzler Stuart', DEF_Constants['sci-fi legendary']), \
-##        1509: (b'Alien Queen Red', DEF_Constants['sci-fi rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 1509, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        38: (b'A.W.E.S.O.M.-O 4000', DEF_Constants['sci-fi epic']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 38, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        137: (b'Sixth Element Randy', DEF_Constants['sci-fi legendary']), \
-##        84: (b'Choirboy Butters', DEF_Constants['mystical epic']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 84, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1286: (b'Power Bind', DEF_Constants['mystical common without upgrades']), \
-##        1273: (b'Purify', DEF_Constants['mystical common without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1273, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        86: (b'Angel Wendy', DEF_Constants['mystical common']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 86, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1923: (b'Cupid Cartman', DEF_Constants['mystical rare']), \
-##        2299: (b'Dark Angel Red', DEF_Constants['mystical epic']), \
-##        208: (b'Friar Jimmy', DEF_Constants['mystical common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 208, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        51: (b'Hercules Clyde', DEF_Constants['mystical rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 51, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        138: (b'Hermes Kenny', DEF_Constants['mystical epic']), \
-##        31: (b'Poseidon Stan', DEF_Constants['mystical common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 31, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1277: (b'Regeneration', DEF_Constants['mystical rare without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1277, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        132: (b'Scout Ike', DEF_Constants['mystical common']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 132, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1218: (b'Youth Pastor Craig', DEF_Constants['mystical rare']), \
-##        158: (b'Zen Cartman', DEF_Constants['mystical rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 158, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1307: (b'Energy Staff', DEF_Constants['mystical rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 1307, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        85: (b'Hallelujah', DEF_Constants['mystical rare without upgrades']), \
-                                temp_upgrade = 'lvl 3, 15/25'
-                                templist.append({'id': 85, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1983: (b'Imp Tweek', DEF_Constants['mystical epic']), \
-##        2217: (b'Jesus', DEF_Constants['mystical epic']), \
-##        1804: (b'Medusa Bebe', DEF_Constants['mystical legendary']), \
-##        1504: (b'Prophet Dougie', DEF_Constants['mystical rare']), \
-##        1216: (b'The Master Ninjew', DEF_Constants['mystical legendary']), \
-##        201: (b'Witch Doctor Token', DEF_Constants['mystical legendary']), \
-##        44: (b'Sexy Nun Randy', DEF_Constants['mystical epic']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 44, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1274: (b'Unholy Combustion', DEF_Constants['mystical rare without upgrades']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 1274, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        87: (b'Pope Timmy', DEF_Constants['mystical epic']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 87, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2043: (b'Priest Maxi', DEF_Constants['mystical common']), \
-##        57: (b'Paladin Butters', DEF_Constants['fantasy common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 57, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        37: (b'Princess Kenny', DEF_Constants['fantasy common']), \
-##        1686: (b'Underpants Gnomes', DEF_Constants['fantasy rare']), \
-##        1806: (b'Blood Elf Bebe', DEF_Constants['fantasy common']), \
-##        144: (b'Canadian Knight Ike', DEF_Constants['fantasy rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 144, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        91: (b'Catapult Timmy', DEF_Constants['fantasy rare']), \
-##        61: (b'Dark Mage Craig', DEF_Constants['fantasy rare']), \
-##        2042: (b'Elven King Bradley', DEF_Constants['fantasy rare']), \
-##        141: (b'Shieldmaiden Wendy', DEF_Constants['fantasy legendary']), \
-##        29: (b'Stan the Great', DEF_Constants['fantasy common']), \
-##        1656: (b'Chicken Coop', DEF_Constants['fantasy epic']), \
-##        2295: (b'City Wok Guy', DEF_Constants['fantasy epic']), \
-##        1972: (b'Dragonslayer Red', DEF_Constants['fantasy legendary']), \
-##        1506: (b'Dwarf Engineer Dougie', DEF_Constants['fantasy rare']), \
-##        179: (b'Dwarf King Clyde', DEF_Constants['fantasy rare']), \
-##        89: (b'Kyle of the Drow Elves', DEF_Constants['fantasy rare']), \
-##        206: (b'Le Bard Jimmy', DEF_Constants['fantasy common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 206, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        47: (b'Robin Tweek', DEF_Constants['fantasy common']), \
-##        54: (b'Rogue Token', DEF_Constants['fantasy epic']), \
-##        135: (b'The Amazingly Randy', DEF_Constants['fantasy epic']), \
-##        176: (b'Witch Garrison', DEF_Constants['fantasy rare']), \
-##        2035: (b'Mr. Slave Executioner', DEF_Constants['fantasy epic']), \
-##        2210: (b'Sorceress Liane', DEF_Constants['fantasy epic']), \
-##        1655: (b'Transmogrify', DEF_Constants['fantasy epic without upgrades']), \
-##        1472: (b'Cock Magic', DEF_Constants['fantasy epic without upgrades']), \
-##        32: (b'Grand Wizard Cartman', DEF_Constants['fantasy legendary']), \
-##        2200: (b'Captain Diabetes', DEF_Constants['superheroes common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 2200, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2316: (b'Chaos Hamsters', DEF_Constants['superheroes rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 2316, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2117: (b'Super Fart', DEF_Constants['superheroes common without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 2117, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2130: (b'The Chomper', DEF_Constants['superheroes rare without upgrades']), \
-##        2132: (b'Fastpass', DEF_Constants['superheroes epic']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 2132, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2190: (b'Lava!', DEF_Constants['superheroes common without upgrades']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 2132, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2091: (b'Mosquito', DEF_Constants['superheroes rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 2091, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2202: (b'Professor Chaos', DEF_Constants['superheroes epic']), \
-##        2262: (b'Super Craig', DEF_Constants['superheroes common']), \
-##        2144: (b'Toolshed', DEF_Constants['superheroes epic']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 2144, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2195: (b'Doctor Timothy', DEF_Constants['superheroes rare']), \
-##        2290: (b'General Disarray', DEF_Constants['superheroes rare']), \
-##        2143: (b'Human Kite', DEF_Constants['superheroes epic']), \
-##        2216: (b'Mintberry Crunch', DEF_Constants['superheroes legendary']), \
-##        2098: (b'Tupperware', DEF_Constants['superheroes common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 2098, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2261: (b'Wonder Tweek', DEF_Constants['superheroes rare']), \
-##        2147: (b'Mysterion', DEF_Constants['superheroes legendary']), \
-##        2141: (b'The Coon', DEF_Constants['superheroes epic']), \
-##        2136: (b'Call Girl', DEF_Constants['superheroes legendary']), \
-##        1674: (b'DogPoo', DEF_Constants['neutral epic']), \
-##        1872: (b'Mr. Hankey', DEF_Constants['neutral legendary']), \
-##        1666: (b'Nelly', DEF_Constants['neutral rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1666, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1407: (b'Rat Swarm', DEF_Constants['neutral common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1407, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1947: (b'Towelie', DEF_Constants['neutral epic']), \
-##        1869: (b'Marcus', DEF_Constants['neutral epic']), \
-##        2258: (b'Mayor McDaniels', DEF_Constants['neutral rare']), \
-##        2074: (b'Mr Mackey', DEF_Constants['neutral common']), \
-##        15: (b'Nathan', DEF_Constants['neutral rare']), \
-                                temp_upgrade = 'lvl 2, 5/15'
-                                templist.append({'id': 15, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1886: (b'PC Principal', DEF_Constants['neutral rare']), \
-##        1684: (b'Pigeon Gang', DEF_Constants['neutral common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1684, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1670: (b'Starvin\' Marvin', DEF_Constants['neutral rare']), \
-##        1680: (b'Terrance and Phillip', DEF_Constants['neutral common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1680, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1665: (b'Terrance Mephesto', DEF_Constants['neutral rare']), \
-##        1682: (b'Big Gay Al', DEF_Constants['neutral rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1682, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        1973: (b'Classi', DEF_Constants['neutral epic']), \
-##        1661: (b'Mimsy', DEF_Constants['neutral common']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1661, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2030: (b'President Garrison', DEF_Constants['neutral epic']), \
-##        2081: (b'Santa Claus', DEF_Constants['neutral epic']), \
-##        1683: (b'Officer Barbrady', DEF_Constants['neutral rare']), \
-                                temp_upgrade = 'lvl 1, 1/5'
-                                templist.append({'id': 1683, 's': upgradedict[temp_upgrade]['s'], \
-                                                 'c': upgradedict[temp_upgrade]['c'], \
-                                                 'x': upgradedict[temp_upgrade]['x'], \
-                                                 'w': upgradedict[temp_upgrade]['w']})
-##        2080: (b'Satan', DEF_Constants['neutral legendary']), \
-##        1672: (b'ManBearPig', DEF_Constants['neutral legendary'])}
-                                pass
-                        else:
+
+                        if True:
                                 i = 0
                                 upgrade = upgradedict[DEF_UPGRADE_LEVEL[0]]
                                 elem_s = upgrade['s']
@@ -2365,7 +2114,7 @@ class SPPDFilter:
                                 elem_x = upgrade['x']
                                 elem_w = upgrade['w']
                                 while i < len(CharacterIdList):
-                                        if CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
+                                        if DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL[0] and CharacterIdList[i] in DEF_CARDS_EXCLUDED[0]:
                                                 templist.append({'id': CharacterIdList[i], 's': 6, 'c': 0, 'x': 0, 'w': 7.0})
                                         else:
                                                 templist.append({'id': CharacterIdList[i], 's': elem_s, 'c': elem_c, 'x': elem_x, 'w': elem_w})
@@ -2385,6 +2134,7 @@ class SPPDFilter:
 ##                        mitmproxy.ctx.log.info("list(o['player_data']) == " + repr(list(o['player_data'])))
 ##                        mitmproxy.ctx.log.info('o == ' + repr(o))
                         mitmproxy.ctx.log.info('modified response flow.request.url == ' + repr(flow.request.url))
+                        log_db_entry(flow)
 
                 if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] == False:
                         

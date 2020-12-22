@@ -14,35 +14,30 @@ visit internal website mitm.it and follow instructions to install certificate fo
 
 # Latest setup
 ```
-Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon.py
-
-This addon allows to upgrade every card to level 7 in deckbuilder.
-Open free pack to collect necessary items and navigate to deckbuilder.
+Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon.py
 ```
 
-# Setup for guest account
+# Setup for PVE gameplay
 ```
-Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_GuestAccount.py
+Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_Gameplay.py
 
-This addon tricks SPPD into using guest account,
-if used on fresh SPPD installation. Allows to use SPPD normally.
-This addon should be active in order to use guest account.
+To change which card should be played in PVE, refer to DEF_CUSTOM_CARD_TEST variable.
+In case of need to have more than one card in the deck, change the value of DEF_CUSTOM_CARDS[0] assignment 
+few rows below DEF_CUSTOM_CARD_TEST variable.
 ```
 
 
-# Setup for tvt win count crawling
+# Setup for card upgrades
 ```
-Usage command for guest account: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_TVT.py
+Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_Upgrades.py
 
-In addition to guest account setup, this addon also downloads all player data for top 50 teams, 
-whenever TvT leaderboard is being opened in game.
+To change which card upgrades to show off, change DEF_CARDS_EXCLUDED_EXCEPTION variable.
 ```
 
-# Setup for custom card levels
+# Setup for creating asset backup file (should become useful if South Park: Phone Destroyer servers are shut down)
 ```
-Usage command for custom card levels: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_CustomCardLevels.py
+Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_Assets.py
 
-This addon rewrites card levels and upgrades, 
-allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
-block every other SPPD functionality. 
+Currently there is no information about shutting South Park: Phone Destroyer down any time soon.
+To create a backup, run this script on fresh sppd installation. About 1GB of free space is recommended.
 ```
