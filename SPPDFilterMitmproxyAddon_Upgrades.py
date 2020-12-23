@@ -39,9 +39,6 @@ DEF_USE_CUSTOM_UPGRADE_LEVEL = [True]
 ## If DEF_USE_CUSTOM_UPGRADE_LEVEL is set, this addon rewrites card levels and upgrades, 
 ## allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
 ## block every other SPPD functionality.
-
-##DEF_USE_CUSTOM_UPGRADE_LEVEL = [False]
-
 ## If DEF_USE_CUSTOM_UPGRADE_LEVEL is not set, this addon tricks SPPD into using guest account,
 ## if used on fresh SPPD installation. Allows to use SPPD normally.
 ## This addon should be active in order to use guest account.
@@ -92,7 +89,7 @@ DEF_ENABLE_PLAYER_LEADERBOARD_CRAWLER = [False]
 
 DEF_ENABLE_TVT_LEADERBOARD_LIST_CRAWLER = [False]
 
-DEF_CUSTOM_CARD_TEST = [2365]
+DEF_CUSTOM_CARD_TEST = [2327]
 
 ## DEF_CUSTOM_CARD_TEST sets cards for demo PVE gameplay. Sets card id inside
 ## sppd deck and alters nickname.
@@ -100,13 +97,28 @@ DEF_CUSTOM_CARD_TEST = [2365]
 
 DEF_CUSTOM_CARDS = [[]]
 if not DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL[0]:
-        DEF_CUSTOM_CARDS[0] = [1216, 1656, 1672, 2299, DEF_CUSTOM_CARD_TEST[0]]
+        DEF_CUSTOM_CARDS[0] = [1272, 2324, 2325, 2326, DEF_CUSTOM_CARD_TEST[0]]
 
 
 
 ## DEF_CUSTOM_CARDS loads a list of cards into sppd deck
 
 DEF_pve_difficulty = [1]
+
+DEF_pve_difficulty_per_level = [[DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], \
+                               DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], DEF_pve_difficulty[0], 0]]
+
+assert len(DEF_pve_difficulty_per_level[0]) == 60
 
 ## DEF_pve_difficulty variable sets win count for each PVE campaign level.
 
@@ -152,7 +164,7 @@ DEF_CARDS_EXCLUDED = [[8, 10, 12, 13, 14, 15, 16, 20, 23, 24, 27, 28, 29, 30, \
                        2319, 2324, 2325, 2326, 2327, 2337, 2360, 2365]]
 
 if DEF_UPGRADE_CARDS_ABOVE_SPECIFIED_LEVEL[0]:
-        DEF_CARDS_EXCLUDED_EXCEPTION = [[2365]]
+        DEF_CARDS_EXCLUDED_EXCEPTION = [[2327]]
 
         _temp_len = len(DEF_CARDS_EXCLUDED_EXCEPTION[0])
         _temp_i = 0
@@ -889,7 +901,17 @@ class SPPDFilter:
                         if DEF_USE_CUSTOM_UPGRADE_LEVEL[0] == True:
                                 if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/pvp2/season_finish':
                                         flow.response = mitmproxy.http.HTTPResponse.make(200, \
-                                                                                         json.dumps([]))
+                                                                                         json.dumps({"old_rank": {\
+                                                                                                 "season_reward_mmr": 0.0, \
+                                                                                                 "season_max_mmr": 0.0, \
+                                                                                                 "arena_id": 1, \
+                                                                                                 "mmr": 0.0}, \
+                                                                                                     "rewards": {}, \
+                                                                                                     "new_rank": {"mmr": 0.0, "arena_id": 1}\
+                                                                                                     }))
+##                                        flow.response = mitmproxy.http.HTTPResponse.make(200, \
+##                                                                                         json.dumps({"old_rank": {"season_reward_mmr": 682.6003625759231, "season_max_mmr": 682.6003625759231, "arena_id": 3, "mmr": 682.6003625759231}, "rewards": {}, "new_rank": {"mmr": 682.6003625759231, "arena_id": 3}}))
+##                                        
                                         mitmproxy.ctx.log.info('custom response flow.request.url == ' + repr(flow.request.url))
                                         break
                                 if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/store/catalogs?id=7,8,9,10,11,12&'):
@@ -1692,6 +1714,8 @@ class SPPDFilter:
                         log_db_cache(flow)
                 if flow.request.url.startswith('https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/session/start'):
                         log_db_cache(flow)
+##                if flow.request.url == 'https://pdc-public-ubiservices.ubi.com/v1/spaces/99e34ec4-be44-4a31-a0a2-64982ae01744/sandboxes/DRAFI_IP_LNCH_PDC_A/pvp2/season_finish':
+##                        log_db_cache(flow)
                 customrequestqueue_pending_flow_request_url = None
                 try:
                         customrequestqueue_pending_flow_request_url = customrequestqueue_pending[flow.request.url]
@@ -1744,7 +1768,17 @@ class SPPDFilter:
                                                                       "udp": 5058,\
                                                                       "ws": 80,\
                                                                       "wss": 443}]}, \
-                                    "player": {"arena_id": 1, "cardpack": {"required_score": 5, "score": 0, "total_time": 14400, "unlock_time": 0}}}
+                                    "player": {\
+                                            "standing": {"global": 0, "local": 0}, \
+                                            "arena_claimed": 1, \
+                                            "arena_id": 1, \
+                                            "max_arena_id": 1, \
+                                            "max_mmr_history": [0.0, 0.0, 0.0], "mmr": 0.0, \
+                                            "season_id": 18, \
+                                            "season_reward_mmr": 0.0, \
+                                            "season_max_mmr": 0.0, \
+                                            "cardpack": {"required_score": 5, "score": 0, "total_time": 14400, "unlock_time": 0}\
+                                            }}
                         if 'team' in o:
                                 del o['team']
                         # causes privacy preferences popup that can't be removed
@@ -1887,8 +1921,11 @@ class SPPDFilter:
                         # pvp play button is gone
 ##                        if 'state' in o['player_data']:
 ##                                del o['player_data']['state']
-                        o['player_data']['state'] = [201, -109051905, 200, -1333919907, 203, 31997952, 202, 134217727, \
-                                                     205, 6, 501, 100, 403, 766, 401, 536870911, 400, -2, \
+                        ## 204, 465567764,
+                        ## lack of item 204 locks team section in main window
+                        o['player_data']['state'] = [201, -398458881, 200, 274038616, 203, 16384, 202, 134217727, \
+                                                     205, 1,  \
+                                                     501, 100, 403, 766, 401, 536870911, 400, -2, \
                                                      102, 0, 103, 26656948, 100, 1, 800, 12, 106, 12, 107, 6, 104, 1, 1000, 255]
                         if 'avatar' in o['player_data']:
                                 del o['player_data']['avatar']
@@ -1974,8 +2011,9 @@ class SPPDFilter:
                         
 ##                        pve_difficulty = 10000
                         pve_difficulty_1 = 1
-                        pve_difficulty = DEF_pve_difficulty[0]
+##                        pve_difficulty = DEF_pve_difficulty[0]
                         pve_difficulty_pre_mission = 0
+                        pve_difficulty_per_level = DEF_pve_difficulty_per_level[0]
                         o['player_data']['episode'] = [\
                                 {'node': 0, 'state': 0, 'levels': [{'a': 0, 's': 0, 'id': 2135, 'w': pve_difficulty_pre_mission, 'l': 0}, \
                                                                    {'a': 0, 's': 0, 'id': 2161, 'w': pve_difficulty_pre_mission, 'l': 0}, \
@@ -1989,87 +2027,87 @@ class SPPDFilter:
                                                                    ], 'id': 0, 'star_level': 1}, \
                                 \
                                 {'node': 0, 'state': 0, 'levels': [\
-                                        {'a': 2, 's': 52, 'id': 1327, 'w': pve_difficulty, 'l': 25}, \
-                                        {'a': 2, 's': 52, 'id': 1344, 'w': pve_difficulty, 'l': 25}, \
-                                        {'a': 2, 's': 52, 'id': 1338, 'w': pve_difficulty, 'l': 25}, \
-                                        {'a': 2, 's': 52, 'id': 1326, 'w': pve_difficulty, 'l': 25}, \
-                                        {'a': 2, 's': 52, 'id': 1312, 'w': pve_difficulty, 'l': 25}], 'id': 1, 'star_level': 4}, \
+                                        {'a': 2, 's': 52, 'id': 1327, 'w': pve_difficulty_per_level[0], 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1344, 'w': pve_difficulty_per_level[1], 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1338, 'w': pve_difficulty_per_level[2], 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1326, 'w': pve_difficulty_per_level[3], 'l': 25}, \
+                                        {'a': 2, 's': 52, 'id': 1312, 'w': pve_difficulty_per_level[4], 'l': 25}], 'id': 1, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 116, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1401, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1400, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1476, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1475, 'w': pve_difficulty, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[9], 'id': 116, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1401, 'w': pve_difficulty_per_level[7], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1400, 'w': pve_difficulty_per_level[5], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1476, 'w': pve_difficulty_per_level[8], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1475, 'w': pve_difficulty_per_level[6], 'l': 25}\
                                                                    ], 'id': 2, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1410, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1411, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1412, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1413, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1415, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1410, 'w': pve_difficulty_per_level[10], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1411, 'w': pve_difficulty_per_level[11], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1412, 'w': pve_difficulty_per_level[12], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1413, 'w': pve_difficulty_per_level[13], 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[14], 'id': 1415, 'special': 1}\
                                                                    ], 'id': 3, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1418, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1419, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1660, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1416, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1417, 'w': pve_difficulty, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1418, 'w': pve_difficulty_per_level[17], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1419, 'w': pve_difficulty_per_level[18], 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[19], 'id': 1660, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1416, 'w': pve_difficulty_per_level[15], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1417, 'w': pve_difficulty_per_level[16], 'l': 25}\
                                                                    ], 'id': 4, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1420, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1664, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1663, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1662, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1661, 'w': pve_difficulty, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[24], 'id': 1420, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1664, 'w': pve_difficulty_per_level[23], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1663, 'w': pve_difficulty_per_level[22], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1662, 'w': pve_difficulty_per_level[21], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1661, 'w': pve_difficulty_per_level[20], 'l': 25}\
                                                                    ], 'id': 5, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1498, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1494, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1495, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1496, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1497, 'w': pve_difficulty, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[29], 'id': 1498, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1494, 'w': pve_difficulty_per_level[25], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1495, 'w': pve_difficulty_per_level[26], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1496, 'w': pve_difficulty_per_level[27], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1497, 'w': pve_difficulty_per_level[28], 'l': 25}\
                                                                    ], 'id': 6, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1502, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1499, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1500, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1501, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1503, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1502, 'w': pve_difficulty_per_level[33], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1499, 'w': pve_difficulty_per_level[30], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1500, 'w': pve_difficulty_per_level[31], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1501, 'w': pve_difficulty_per_level[32], 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[34], 'id': 1503, 'special': 1}\
                                                                    ], 'id': 7, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1524, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1525, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1526, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1527, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1528, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1524, 'w': pve_difficulty_per_level[35], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1525, 'w': pve_difficulty_per_level[36], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1526, 'w': pve_difficulty_per_level[37], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1527, 'w': pve_difficulty_per_level[38], 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[39], 'id': 1528, 'special': 1}\
                                                                    ], 'id': 8, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1508, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1506, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1507, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1504, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1505, 'w': pve_difficulty, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[44], 'id': 1508, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1506, 'w': pve_difficulty_per_level[42], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1507, 'w': pve_difficulty_per_level[43], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1504, 'w': pve_difficulty_per_level[40], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1505, 'w': pve_difficulty_per_level[41], 'l': 25}\
                                                                    ], 'id': 9, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1509, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1511, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1510, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1513, 'special': 1}, \
-                                                                   {'a': 2, 's': 52, 'id': 1512, 'w': pve_difficulty, 'l': 25}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1509, 'w': pve_difficulty_per_level[45], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1511, 'w': pve_difficulty_per_level[47], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1510, 'w': pve_difficulty_per_level[46], 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[49], 'id': 1513, 'special': 1}, \
+                                                                   {'a': 2, 's': 52, 'id': 1512, 'w': pve_difficulty_per_level[48], 'l': 25}\
                                                                    ], 'id': 10, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1515, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1514, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1517, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1516, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1518, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1515, 'w': pve_difficulty_per_level[51], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1514, 'w': pve_difficulty_per_level[50], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1517, 'w': pve_difficulty_per_level[53], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1516, 'w': pve_difficulty_per_level[52], 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[54], 'id': 1518, 'special': 1}\
                                                                    ], 'id': 11, 'star_level': 4}, \
                                 \
-                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1520, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1519, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1521, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 's': 52, 'id': 1522, 'w': pve_difficulty, 'l': 25}, \
-                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty, 'id': 1523, 'special': 1}\
+                                {'node': 0, 'state': 0, 'levels': [{'a': 2, 's': 52, 'id': 1520, 'w': pve_difficulty_per_level[56], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1519, 'w': pve_difficulty_per_level[55], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1521, 'w': pve_difficulty_per_level[57], 'l': 25}, \
+                                                                   {'a': 2, 's': 52, 'id': 1522, 'w': pve_difficulty_per_level[58], 'l': 25}, \
+                                                                   {'a': 2, 'l': 25, 's': 52, 'w': pve_difficulty_per_level[59], 'id': 1523, 'special': 1}\
                                                                    ], 'id': 12, 'star_level': 4}\
                                 ]
                         # connection error

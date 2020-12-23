@@ -17,6 +17,14 @@ visit internal website mitm.it and follow instructions to install certificate fo
 Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon.py
 ```
 
+# Setup for Guest Account
+```
+Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_GuestAccount.py
+
+Use this script to block Google Play Games and enter guest account mode. 
+All PVP and PVE gameplay is functioning as game developers intended.
+```
+
 # Setup for PVE gameplay
 ```
 Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_Gameplay.py

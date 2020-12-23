@@ -1,6 +1,6 @@
 ## This python script requires mitmproxy library. Install it with following command: Scripts\pip.exe install mitmproxy
 ##
-## Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon.py
+## Usage command: Scripts\mitmdump.exe -s ./SPPDFilterMitmproxyAddon_GuestAccount.py
 ## mitmweb can also be used instead of mitmdump
 ##
 ## Mitmproxy API documentation is available by using this command: python.exe -m pydoc mitmproxy
@@ -28,13 +28,13 @@ DEF_ENABLE_DEBUG_LOG = [False]
 
 ## enables log_db_entry() call. Used for debugging.
 
-DEF_ENABLE_FILE_CACHE = [True]
+DEF_ENABLE_FILE_CACHE = [False]
 
 ## enables log_db_cache() call. Used to generate bootstrap file that includes all game assets needed for offline mode.
 ## To generate complete bootstrap file, use this script on the new instance of MEmu emulator.
 ## Reminder: launch mitmproxy before opening SPPD for the first time.
 
-DEF_USE_CUSTOM_UPGRADE_LEVEL = [True]
+DEF_USE_CUSTOM_UPGRADE_LEVEL = [False]
 
 ## If DEF_USE_CUSTOM_UPGRADE_LEVEL is set, this addon rewrites card levels and upgrades, 
 ## allow user to open SPPD deckbuilder and explore card stats for chosen upgrade and
